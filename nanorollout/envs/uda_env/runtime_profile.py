@@ -122,10 +122,9 @@ def apply_task_runtime_to_sandbox_config(
     launch-template override with ``ec2_allow_launch_template_override``.
     """
     runtime = task_runtime(task)
-    if not runtime:
-        return sandbox_config
+    if runtime:
+        sandbox_config.setdefault("task_runtime", runtime)
 
-    sandbox_config.setdefault("task_runtime", runtime)
     required_env_type = _clean(runtime.get("env_type")).lower()
     current_runtime_type = _clean(sandbox_config.get("runtime_type")).lower()
     if required_env_type:
@@ -150,7 +149,8 @@ def apply_task_runtime_to_sandbox_config(
     profiles = _load_profiles(_clean(sandbox_config.get("ec2_env_profiles_path")) or None)
     resolved_name, profile_data = _resolve_alias(profile, profiles)
     status = _clean(profile_data.get("status")).lower()
-    if status and "validated" not in status:
+    explicit_ami_id = _clean(sandbox_config.get("ec2_ami_id") or sandbox_config.get("ami_id"))
+    if status and "validated" not in status and not explicit_ami_id:
         raise ValueError(f"runtime profile {profile!r} is not rollout-ready (status={status!r})")
 
     required_software = runtime.get("required_software") or []
@@ -172,13 +172,14 @@ def apply_task_runtime_to_sandbox_config(
     profile_has_task_requirement = bool(runtime.get("env_profile"))
     if ami_id and (profile_has_task_requirement or not sandbox_config.get("ec2_ami_id")):
         sandbox_config["ec2_ami_id"] = ami_id
-        if not use_lt_override and resolved_name not in {"general-root", "general"}:
-            for key in (
-                "ec2_launch_template_id",
-                "ec2_launch_template_name",
-                "ec2_launch_template_version",
-            ):
-                sandbox_config.pop(key, None)
+    selected_ami_id = _clean(sandbox_config.get("ec2_ami_id") or sandbox_config.get("ami_id"))
+    if selected_ami_id and not use_lt_override and resolved_name not in {"general-root", "general"}:
+        for key in (
+            "ec2_launch_template_id",
+            "ec2_launch_template_name",
+            "ec2_launch_template_version",
+        ):
+            sandbox_config.pop(key, None)
 
     sandbox_config.setdefault("required_software", list(_lower_set(required_software)))
     return sandbox_config
