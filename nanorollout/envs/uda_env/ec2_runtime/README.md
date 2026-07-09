@@ -11,7 +11,8 @@ Region: `ap-southeast-1` (Singapore)
 | Profile | Purpose | AMI | Instance | Status |
 | --- | --- | --- | --- | --- |
 | `general-root` | OSWorld Ubuntu 22.04 GNOME desktop + UDA `/v1` API | `ami-0e0244ba3257d200d` | `t3.xlarge` | validated |
-| `multimedia` / `media` | General root + Blender/video/audio stack | `ami-0982def14f5ab6546` | `t3.xlarge` | validated |
+| `multimedia` / `media` | General root + Blender/video/audio stack. Current AMI has Ubuntu apt Blender 3.0.1. | `ami-0982def14f5ab6546` | `t3.xlarge` | validated |
+| `multimedia-blender5` | Next multimedia build target with Blender 5.1.2 as default `blender` and apt Blender as optional `blender3`. | fill after build | `t3.xlarge` | build-ready |
 | `datascience` / `bi` | General root + BI/notebook/analytics stack | `ami-0a853376fa22ebf11` | `t3.xlarge` | validated |
 
 Shared AWS resources:
@@ -78,6 +79,12 @@ EC2_AMI_ID=ami-0982def14f5ab6546 EC2_ENV_PROFILE=multimedia ...
 EC2_AMI_ID=ami-0a853376fa22ebf11 EC2_ENV_PROFILE=datascience ...
 ```
 
+For ALE/Blender tasks with generated `.blend` files carrying Blender 5.0/5.1
+headers, build and validate `multimedia-blender5` before use. The profile
+provision script installs Blender 5.1.2 under `/opt/blender`, links it as
+`/usr/local/bin/blender`, and preserves apt Blender as `/usr/local/bin/blender3`
+when the Ubuntu package is present.
+
 ## Validate
 
 Run base runtime smoke:
@@ -92,6 +99,11 @@ Run profile smoke:
 .venv/bin/python nanorollout/envs/uda_env/ec2_runtime/aws/smoke_profile_ami.py \
   --ami-id ami-0982def14f5ab6546 \
   --profile-name multimedia \
+  --instance-type t3.xlarge
+
+.venv/bin/python nanorollout/envs/uda_env/ec2_runtime/aws/smoke_profile_ami.py \
+  --ami-id <new-blender5-ami> \
+  --profile-name multimedia-blender5 \
   --instance-type t3.xlarge
 
 .venv/bin/python nanorollout/envs/uda_env/ec2_runtime/aws/smoke_profile_ami.py \

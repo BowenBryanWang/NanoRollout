@@ -8,6 +8,11 @@ PROFILE_NAME="${UDA_PROFILE_NAME:-multimedia}"
 MARKER_DIR="/opt/uda-ec2"
 MARKER_JSON="${MARKER_DIR}/profile-${PROFILE_NAME}.json"
 MARKER_READY="${MARKER_DIR}/profile-${PROFILE_NAME}.ready"
+BLENDER_VERSION="${BLENDER_VERSION:-5.1.2}"
+BLENDER_MAJOR_MINOR="${BLENDER_VERSION%.*}"
+BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
+BLENDER_DIR="/opt/blender/blender-${BLENDER_VERSION}-linux-x64"
+BLENDER_URL="${BLENDER_URL:-https://download.blender.org/release/Blender${BLENDER_MAJOR_MINOR}/${BLENDER_ARCHIVE}}"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -18,6 +23,9 @@ add-apt-repository -y multiverse
 apt-get update
 
 APT_PACKAGES=(
+  ca-certificates
+  wget
+  xz-utils
   blender
   kdenlive
   openshot-qt
@@ -42,6 +50,20 @@ done
 apt-get install -y --no-install-recommends "${AVAILABLE_PACKAGES[@]}"
 
 install -d -m 0755 /opt/shotcut /usr/local/share/applications "${MARKER_DIR}"
+install -d -m 0755 /opt/blender
+
+if command -v blender >/dev/null 2>&1 && [[ -x /usr/bin/blender ]]; then
+  ln -sf /usr/bin/blender /usr/local/bin/blender3
+fi
+
+wget -O "/opt/blender/${BLENDER_ARCHIVE}" "${BLENDER_URL}"
+tar -C /opt/blender -xf "/opt/blender/${BLENDER_ARCHIVE}"
+test -x "${BLENDER_DIR}/blender"
+ln -sf "${BLENDER_DIR}/blender" /usr/local/bin/blender
+blender --version
+if command -v blender3 >/dev/null 2>&1; then
+  blender3 --version || true
+fi
 
 python3 - <<'PY'
 from __future__ import annotations
@@ -106,6 +128,7 @@ from pathlib import Path
 
 commands = {
     "blender": "blender --version",
+    "blender3": "blender3 --version",
     "kdenlive": "kdenlive --version",
     "openshot": "openshot-qt --version",
     "audacity": "audacity --version",
@@ -117,8 +140,14 @@ commands = {
 
 manifest = {
     "profile": "multimedia",
+    "blender_default": {
+        "version": "5.1.2",
+        "path": "/usr/local/bin/blender",
+        "legacy_path": "/usr/local/bin/blender3",
+    },
     "includes": [
-        "Blender",
+        "Blender 5.1.2 default on PATH as blender",
+        "Ubuntu apt Blender retained as optional blender3 when available",
         "Kdenlive",
         "OpenShot",
         "Shotcut",

@@ -27,6 +27,7 @@ Validated AMIs:
 | --- | --- | --- | --- | --- | --- |
 | `general-root` | `general` | `ami-0e0244ba3257d200d` | `uda-osworld-verified-v1-base-1783061353` | 80 GB | see AMI block device |
 | `multimedia` | `media` | `ami-0982def14f5ab6546` | `uda-multimedia-profile-20260703-codex` | 120 GB | `snap-06cd8150463dad8cf` |
+| `multimedia-blender5` | n/a | fill after build | Blender 5.1.2 multimedia rebuild target | 120 GB | fill after build |
 | `datascience` | `bi` | `ami-0a853376fa22ebf11` | `uda-datascience-bi-profile-metabase-v04915-20260703c` | 120 GB | `snap-0c95a35f4ef3d8c86` |
 
 Base source:
@@ -77,7 +78,7 @@ profile AMIs through `EC2_AMI_ID` or a resolver that reads
 
 `multimedia` / `media` includes:
 
-- Blender
+- Blender. The currently validated AMI has Ubuntu apt Blender 3.0.1.
 - Kdenlive
 - OpenShot
 - Shotcut
@@ -87,6 +88,12 @@ profile AMIs through `EC2_AMI_ID` or a resolver that reads
 - OBS Studio
 - frei0r/mlt plugins
 - the general root office/browser/PDF/image stack
+
+`multimedia-blender5` is the build-ready replacement for ALE/Blender tasks
+whose generated `.blend` files carry Blender 5.0/5.1 headers. Its provision
+script installs Blender 5.1.2 at `/opt/blender/blender-5.1.2-linux-x64`,
+links `/usr/local/bin/blender` to that binary, and keeps apt Blender available
+as `/usr/local/bin/blender3` when present.
 
 `datascience` / `bi` includes:
 
@@ -261,6 +268,11 @@ Profile smoke:
 .venv/bin/python nanorollout/envs/uda_env/ec2_runtime/aws/smoke_profile_ami.py \
   --ami-id ami-0982def14f5ab6546 \
   --profile-name multimedia \
+  --instance-type t3.xlarge
+
+.venv/bin/python nanorollout/envs/uda_env/ec2_runtime/aws/smoke_profile_ami.py \
+  --ami-id <new-blender5-ami> \
+  --profile-name multimedia-blender5 \
   --instance-type t3.xlarge
 
 .venv/bin/python nanorollout/envs/uda_env/ec2_runtime/aws/smoke_profile_ami.py \

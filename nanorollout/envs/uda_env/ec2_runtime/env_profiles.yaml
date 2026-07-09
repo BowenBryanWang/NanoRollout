@@ -98,6 +98,36 @@ profiles:
       - OBS Studio
       - frei0r/mlt plugins
       - ffmpeg, mediainfo, exiftool from general-root
+    known_issues:
+      - "Current validated AMI has Ubuntu apt Blender 3.0.1; Blender tasks whose generated .blend files require Blender 5.x must use a rebuilt Blender-5 profile or ship a setup-managed portable Blender."
+    next_build:
+      - "provision_multimedia_profile_ami.sh now installs Blender 5.1.2 as /usr/local/bin/blender and preserves apt Blender as /usr/local/bin/blender3."
+
+  multimedia-blender5:
+    description: "Build-ready multimedia profile for ALE/advanced Blender tasks requiring Blender 5.0/5.1-compatible .blend support."
+    parent: general-root
+    region: ap-southeast-1
+    source_ami_id: ami-0e0244ba3257d200d
+    status: build-ready
+    default_instance_type: t3.xlarge
+    disk_gb: 120
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+    required_versions:
+      blender: "5.1.2"
+      blender3: "3.0.1 optional legacy"
+    default_binaries:
+      blender: /usr/local/bin/blender
+      blender3: /usr/local/bin/blender3
+    provision_script: nanorollout/envs/uda_env/ec2_runtime/provision_multimedia_profile_ami.sh
+    smoke_checks:
+      - "blender --version must report Blender 5.1.2"
+      - "blender3 --version may report Ubuntu apt Blender 3.0.1 when apt blender is installed"
+      - "Blender 5.1.2 must open starter.blend files with v0501 headers"
+    includes:
+      - Blender 5.1.2 available on PATH as blender
+      - Optional Ubuntu apt Blender retained on PATH as blender3
+      - Kdenlive, OpenShot, Shotcut, Audacity, HandBrake, VLC, OBS Studio
 
   multimedia-clean-ubuntu-legacy:
     description: "Legacy multimedia profile: clean-Ubuntu legacy base + 3D/video/audio editing stack."

@@ -32,6 +32,19 @@ PROFILE_COMMANDS = {
         "ffmpeg",
         "mediainfo",
     ],
+    "multimedia-blender5": [
+        "blender",
+        "kdenlive",
+        "openshot-qt",
+        "audacity",
+        "HandBrakeCLI",
+        "vlc",
+        "obs",
+        "shotcut",
+        "melt",
+        "ffmpeg",
+        "mediainfo",
+    ],
     "datascience": [
         "grafana-server",
         "metabase",
@@ -144,6 +157,26 @@ def main() -> int:
         result["checks"]["missing_commands"] = missing
         if missing:
             failures.append("commands")
+
+        if args.profile_name == "multimedia-blender5":
+            blender_shell = runtime.exec_in_runtime(
+                (
+                    "set -u; "
+                    "blender --version | head -n 1; "
+                    "blender --version | head -n 1 | grep -F 'Blender 5.1.2'; "
+                    "if command -v blender3 >/dev/null 2>&1; then "
+                    "  blender3 --version | head -n 1; "
+                    "fi; "
+                    "test \"$(readlink -f /usr/local/bin/blender)\" = "
+                    "\"/opt/blender/blender-5.1.2-linux-x64/blender\"; "
+                    "echo __UDA_BLENDER5_OK__"
+                ),
+                workdir=args.workspace_dir,
+                timeout=60,
+            )
+            result["checks"]["blender5"] = blender_shell
+            if "__UDA_BLENDER5_OK__" not in (blender_shell.get("output") or ""):
+                failures.append("blender5")
 
         screenshot = client.get_feedback({"action_type": "computer_use_screenshot"})
         result["checks"]["screenshot"] = {
