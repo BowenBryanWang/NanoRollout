@@ -92,12 +92,26 @@ class ClaudeCode(InstalledAgentBase):
         self.exec(
             environment,
             (
-                "if command -v apk >/dev/null 2>&1; then "
+                "if command -v curl >/dev/null 2>&1 && command -v bash >/dev/null 2>&1; then "
+                "  true; "
+                "elif command -v apk >/dev/null 2>&1; then "
                 "  apk add --no-cache curl bash nodejs npm; "
                 "elif command -v apt-get >/dev/null 2>&1; then "
-                "  apt-get update && apt-get install -y curl; "
+                "  if [ \"$(id -u)\" = 0 ]; then "
+                "    apt-get update && apt-get install -y curl bash; "
+                "  elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then "
+                "    sudo apt-get update && sudo apt-get install -y curl bash; "
+                "  else "
+                "    echo 'curl/bash missing and apt-get requires root' >&2; exit 1; "
+                "  fi; "
                 "elif command -v yum >/dev/null 2>&1; then "
-                "  yum install -y curl; "
+                "  if [ \"$(id -u)\" = 0 ]; then "
+                "    yum install -y curl bash; "
+                "  elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then "
+                "    sudo yum install -y curl bash; "
+                "  else "
+                "    echo 'curl/bash missing and yum requires root' >&2; exit 1; "
+                "  fi; "
                 "else "
                 '  echo "Warning: No known package manager found, assuming curl is available" >&2; '
                 "fi"
@@ -108,19 +122,21 @@ class ClaudeCode(InstalledAgentBase):
 
         version_flag = f" {self._version}" if self._version else ""
         package_suffix = f"@{self._version}" if self._version else ""
+        install_script = (
+            "set -euo pipefail; "
+            "if command -v apk >/dev/null 2>&1; then "
+            f"  npm install -g @anthropic-ai/claude-code{package_suffix}; "
+            "else "
+            "  curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh; "
+            f"  bash /tmp/claude-install.sh{version_flag}; "
+            "fi && "
+            "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc && "
+            'export PATH="$HOME/.local/bin:$PATH" && '
+            "claude --version"
+        )
         self.exec(
             environment,
-            (
-                "set -euo pipefail; "
-                "if command -v apk >/dev/null 2>&1; then "
-                f"  npm install -g @anthropic-ai/claude-code{package_suffix}; "
-                "else "
-                f"  curl -fsSL https://claude.ai/install.sh | bash -s --{version_flag}; "
-                "fi && "
-                "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc && "
-                'export PATH="$HOME/.local/bin:$PATH" && '
-                "claude --version"
-            ),
+            f"bash -lc {shlex.quote(install_script)}",
             timeout_sec=self.install_timeout_sec,
         )
 

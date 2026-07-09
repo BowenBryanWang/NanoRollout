@@ -1,0 +1,7 @@
+{
+  "id": "codex100_002",
+  "name": "UDA-Gym native demo: W&B model selection reconciliation",
+  "category": "uda-gym-demo",
+  "timeout_seconds": 1200,
+  "driver": "uda-gym"
+}

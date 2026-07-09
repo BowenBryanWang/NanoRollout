@@ -34,7 +34,7 @@ DEFAULT_BENCH = "cocoa-v1"
 # task.yaml(.enc) + test.py(.enc) + canary.txt) so this runner can load them.
 # osworld-v1 is the exception: it ships no per-task schema, reading its
 # corpus straight from ``examples/eval/osworld/data/`` via OSWorldV1Driver.
-SUPPORTED_BENCHES = ("cocoa-v1", "wildclaw-v1", "osworld-v1")
+SUPPORTED_BENCHES = ("cocoa-v1", "wildclaw-v1", "osworld-v1", "uda-gym")
 
 # Benches whose tasks are .json files at custom paths rather than directories
 # under ``adapter/<bench>/<id>/``. ``_resolve_task_root`` and ``_load_task``
@@ -187,7 +187,17 @@ def _coerce_bool(value: Any, *, default: bool = False) -> bool:
 
 
 def _is_uda_task_dir(path: Path) -> bool:
-    return (path / "task.yaml").is_file() or (path / "task.yaml.enc").is_file()
+    if (path / "task.yaml").is_file() or (path / "task.yaml.enc").is_file():
+        return True
+    # Native uda-gym bundles intentionally allow instruction.md without
+    # task.yaml; the per-bench driver reads meta.json/instruction.md/setup.sh/
+    # check.sh directly.
+    return (
+        (path / "meta.json").is_file()
+        and (path / "instruction.md").is_file()
+        and (path / "setup.sh").is_file()
+        and (path / "check.sh").is_file()
+    )
 
 
 def _resolve_bench(bench: Optional[str], extra_args: dict[str, Any]) -> str:
@@ -252,7 +262,8 @@ def _resolve_task_root(
         )
     if not _is_uda_task_dir(task_dir):
         raise FileNotFoundError(
-            f"Task directory {task_dir} is missing task.yaml(.enc)."
+            f"Task directory {task_dir} is missing task.yaml(.enc) or native "
+            "uda-gym files (meta.json, instruction.md, setup.sh, check.sh)."
         )
     return task_root, task_dir.resolve()
 
@@ -408,6 +419,41 @@ def _build_uda_config(
         sandbox["modal_startup_timeout"] = extra_args["modal_startup_timeout"]
     if "modal_container_port" in extra_args:
         sandbox["modal_container_port"] = extra_args["modal_container_port"]
+    for key in (
+        "aws_profile",
+        "aws_region",
+        "ec2_region",
+        "ec2_ami_id",
+        "ec2_launch_template_id",
+        "ec2_launch_template_name",
+        "ec2_launch_template_version",
+        "ec2_instance_id",
+        "ec2_instance_type",
+        "ec2_subnet_id",
+        "ec2_security_group_ids",
+        "ec2_iam_instance_profile",
+        "ec2_key_name",
+        "ec2_workspace_dir",
+        "ec2_use_private_ip",
+        "ec2_terminate_on_cleanup",
+        "ec2_terminate_attached_instance",
+        "ec2_wait_for_termination",
+        "ec2_instance_running_timeout",
+        "ec2_health_timeout",
+        "ec2_container_port",
+        "ec2_port",
+        "ec2_env_profile",
+        "ec2_profile_name",
+        "env_profile",
+        "ec2_owner",
+        "ec2_ttl",
+        "ec2_tags",
+        "ec2_instance_name",
+        "ec2_project_tag",
+        "ec2_user_data",
+    ):
+        if key in extra_args:
+            sandbox[key] = extra_args[key]
 
     config = dict(base_config)
     config["agent_type"] = str(extra_args.get("agent_type") or base_config.get("agent_type", "uda"))
@@ -427,15 +473,24 @@ def _build_reward_payload(
     error_msg: Optional[str],
 ) -> dict[str, Any]:
     eval_result = result.get("eval") if isinstance(result.get("eval"), dict) else {}
-    resolved = bool(eval_result.get("passed"))
+    if "passed" in eval_result:
+        resolved = bool(eval_result.get("passed"))
+        reward = 1.0 if resolved else 0.0
+    else:
+        try:
+            reward = float(eval_result.get("overall_score", 0.0))
+        except (TypeError, ValueError):
+            reward = 0.0
+        reward = max(0.0, min(1.0, reward))
+        resolved = reward >= 1.0
     return {
         "instance_id": instance_id,
         "resolved": resolved,
         "resolved_status": "FULL" if resolved else "NO",
-        "reward": 1 if resolved else 0,
+        "reward": reward,
         "error": error_msg or result.get("error"),
         "feedback": eval_result.get("feedback"),
-        "details": eval_result.get("details", {}),
+        "details": eval_result.get("details", eval_result),
     }
 
 
@@ -554,6 +609,12 @@ def run_uda_agent(
                 task_dir,
                 _coerce_bool(config.get("use_encrypted_tasks"), default=encrypted_task),
             )
+            from nanorollout.envs.uda_env.runtime_profile import (
+                apply_task_runtime_to_sandbox_config,
+            )
+
+            apply_task_runtime_to_sandbox_config(task, sandbox_config)
+            _write_json(config_path, config)
             agent = UDAAgent(config)
             wait_time = int(
                 extra_args.get("create_timeout")

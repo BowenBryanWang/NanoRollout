@@ -123,17 +123,31 @@ class BaseSandboxRuntime:
                 return None
         return getattr(client, "sdk_client", None)
 
+    def _default_workspace(self) -> str:
+        cfg = getattr(self.client, "sandbox_config", {}) or {}
+        metadata = getattr(self.client, "runtime_metadata", {}) or {}
+        return (
+            cfg.get("workspace_dir")
+            or cfg.get("ec2_workspace_dir")
+            or metadata.get("workspace_dir")
+            or UDA_WORKSPACE
+        )
+
     @staticmethod
     def _write_single_file(sdk, src: "Path", dest: str) -> None:
-        """SDK-mediated single-file write into the container."""
+        """SDK-mediated single-file write into the container.
+
+        The SDK's ``file.write_file`` takes ``content: str`` and an
+        ``encoding`` selector. Always send base64 + ``encoding='base64'``
+        so binary files (and Python source with non-ASCII chars) round-
+        trip cleanly. The previous bytes-or-naive-base64 fallback dropped
+        the encoding flag, which made the server write the raw base64
+        text into the file — silently corrupting grade.py / warmup.sh.
+        """
         with open(src, "rb") as fh:
             data = fh.read()
-        # The agent-infra sandbox accepts text or base64-encoded bytes
-        # depending on SDK version; use bytes when available, else base64.
-        try:
-            sdk.file.write_file(file=dest, content=data)
-        except TypeError:
-            sdk.file.write_file(file=dest, content=base64.b64encode(data).decode("ascii"))
+        encoded = base64.b64encode(data).decode("ascii")
+        sdk.file.write_file(file=dest, content=encoded, encoding="base64")
 
     def exec_in_runtime(
         self,
@@ -169,12 +183,19 @@ class BaseSandboxRuntime:
             prefix = " ".join(f"{k}={_shlex.quote(str(v))}" for k, v in env.items())
             command = f"{prefix} {command}"
         try:
-            session = sdk.shell.create_session(exec_dir=workdir or UDA_WORKSPACE)
+            default_workspace = self._default_workspace()
+            session = sdk.shell.create_session(exec_dir=workdir or default_workspace)
             session_id = session.data.session_id
+            # The SDK server caps shell sessions at ~120s of stdout
+            # silence regardless of ``no_change_timeout`` / ``hard_timeout``
+            # values we pass — those params are silently ignored. The
+            # real defence against long LLM-call idle stretches is the
+            # heartbeat in ``UdaShellAdapter.execute``; here we only set
+            # the wall-clock budget the server *does* honour.
             result = sdk.shell.exec_command(
                 command=command,
                 id=session_id,
-                exec_dir=workdir or UDA_WORKSPACE,
+                exec_dir=workdir or default_workspace,
                 async_mode=False,
                 timeout=int(timeout),
             )
@@ -191,9 +212,19 @@ class BaseSandboxRuntime:
     def _wait_for_health(self, wait_time: int) -> bool:
         waited = 0
         sleep_interval = 5
+        cfg = getattr(self.client, "sandbox_config", {}) or {}
+        required_successes = max(1, int(cfg.get("health_successes", 1)))
+        successes = 0
         while waited < wait_time:
             if self.client.health_check():
-                return True
+                successes += 1
+                if successes >= required_successes:
+                    post_delay = float(cfg.get("post_health_delay", 0) or 0)
+                    if post_delay > 0:
+                        time.sleep(post_delay)
+                    return True
+            else:
+                successes = 0
             waited += sleep_interval
             runtime_logger.info(
                 "Sandbox not ready yet. Waiting ... (%s/%s seconds)",
@@ -245,6 +276,7 @@ class SandboxClient:
         self.runtime_type = (self.sandbox_config.get("runtime_type") or "docker").strip().lower()
         self.runtime_metadata: Dict[str, Any] = {
             "type": self.runtime_type,
+            "runtime_type": self.runtime_type,
             "base_url": self.base_url,
             "surfaces": ["shell", "file", "code", "jupyter", "computer-use"],
         }
@@ -264,10 +296,12 @@ class SandboxClient:
     def _create_runtime_provider(self):
         """Construct the configured runtime backend."""
         from .docker import DockerComposeSandboxRuntime
+        from .ec2 import EC2SandboxRuntime
         from .modal import ModalSandboxRuntime
 
         providers = {
             "docker": DockerComposeSandboxRuntime,
+            "ec2": EC2SandboxRuntime,
             "modal": ModalSandboxRuntime,
         }
         provider_cls = providers.get(self.runtime_type)
@@ -371,6 +405,13 @@ class SandboxClient:
 
     def create_environment(self, task: Dict[str, Any], wait_time: int = 60) -> bool:
         """Create and start a sandbox environment using the configured runtime."""
+        try:
+            from .runtime_profile import apply_task_runtime_to_sandbox_config
+
+            apply_task_runtime_to_sandbox_config(task, self.sandbox_config)
+        except Exception as exc:
+            runtime_logger.error("task runtime/profile resolution failed: %s", exc)
+            raise
         self.runtime_metadata = {
             "type": self.runtime_type,
             "base_url": self.base_url,
@@ -520,7 +561,7 @@ class ComputerUseSandboxClient(SandboxClient):
         else:
             message = f"computer-use {action_type}: ok"
 
-        feedback: Dict[str, Any] = {"done": False, "message": message}
+        feedback: Dict[str, Any] = {"done": not bool(error), "message": message}
         if image_b64:
             # Optional Claude-friendly resize/recompress.
             try:
@@ -566,11 +607,38 @@ class UnifiedSandboxClient(SandboxClient):
     def _initialize_sdk_client(self) -> None:
         """Initialise the agent-infra/sandbox SDK client and computer-use sub-client."""
         if self.sdk_client is None:
-            self.sdk_client = Sandbox(base_url=self.base_url)
-            logger.debug(f"Initialized Sandbox SDK client with base_url: {self.base_url}")
+            # SDK default httpx timeout is ~60s which is far too short for
+            # installed-agent rollouts (Claude Code's ``claude --print`` can
+            # easily run 10+ minutes). Surface as ``sandbox.sdk_timeout`` so
+            # callers can dial it down for normal per-step controller loops.
+            sdk_timeout = float(self.sandbox_config.get("sdk_timeout", 1800))
+            httpx_client = None
+            if self.sandbox_config.get("sdk_trust_env", False) is False:
+                import httpx
+
+                httpx_client = httpx.Client(
+                    timeout=sdk_timeout,
+                    follow_redirects=True,
+                    trust_env=False,
+                    limits=httpx.Limits(max_keepalive_connections=0),
+                )
+            self.sdk_client = Sandbox(
+                base_url=self.base_url,
+                timeout=sdk_timeout,
+                httpx_client=httpx_client,
+            )
+            logger.debug(
+                f"Initialized Sandbox SDK client with base_url: {self.base_url} (timeout={sdk_timeout}s)"
+            )
+            workspace_dir = (
+                self.sandbox_config.get("workspace_dir")
+                or self.sandbox_config.get("ec2_workspace_dir")
+                or self.runtime_metadata.get("workspace_dir")
+                or UDA_WORKSPACE
+            )
 
             try:
-                session = self.sdk_client.shell.create_session(exec_dir=UDA_WORKSPACE)
+                session = self.sdk_client.shell.create_session(exec_dir=workspace_dir)
                 self.shell_session_id = session.data.session_id
                 logger.debug(f"Created shell session: {self.shell_session_id}")
             except Exception as e:

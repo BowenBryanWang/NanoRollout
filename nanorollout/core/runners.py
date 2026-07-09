@@ -129,6 +129,34 @@ RUNNER_SPECS: tuple[RunnerSpec, ...] = (
         entrypoint="run_uda_agent",
         aliases=("uda", "udaagent", "uda_agent"),
     ),
+    RunnerSpec(
+        task="uda",
+        agent="claude-code",
+        module="nanorollout.harness.runner.uda.installed",
+        entrypoint="run_uda_claude_code",
+        aliases=("claudecode", "uda-claude-code"),
+    ),
+    RunnerSpec(
+        task="uda",
+        agent="qwen-code",
+        module="nanorollout.harness.runner.uda.installed",
+        entrypoint="run_uda_qwen_code",
+        aliases=("qwen-coder", "uda-qwen-code"),
+    ),
+    RunnerSpec(
+        task="uda",
+        agent="codex",
+        module="nanorollout.harness.runner.uda.installed",
+        entrypoint="run_uda_codex",
+        aliases=("codex-cli", "uda-codex"),
+    ),
+    RunnerSpec(
+        task="uda",
+        agent="opencode",
+        module="nanorollout.harness.runner.uda.installed",
+        entrypoint="run_uda_opencode",
+        aliases=("open-code", "uda-opencode"),
+    ),
 )
 
 

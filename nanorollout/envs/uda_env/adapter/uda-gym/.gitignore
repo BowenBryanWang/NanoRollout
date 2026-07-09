@@ -1,0 +1,6 @@
+# Keep canonical task bundles in git; ignore local rollout/runtime artifacts.
+results/
+*/results/
+**/__pycache__/
+**/*.pyc
+**/.DS_Store

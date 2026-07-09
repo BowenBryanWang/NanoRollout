@@ -1,0 +1,10 @@
+{
+  "mode": "hardened-public-hybrid",
+  "mocks": {
+    "wandb_mock": {
+      "public_host": "cua-gym-wandb.xlang.ai",
+      "base_url": "https://cua-gym-wandb.xlang.ai",
+      "requires_admin_token": true
+    }
+  }
+}

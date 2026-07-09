@@ -19,20 +19,18 @@ inline edits rather than as cross-package re-exports.
 import json
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from .adapter import ADAPTER_ROOT
 from .logger import setup_logging, get_logger
-from nanorollout.harness.agents.uda.controller import (
-    OpenAILLM, QwenLLM, BaseLLM, Controller, Human, GeminiLLM, ClaudeLLM,
-    GLMLLM, KimiLLM, DeepSeekLLM,
-    MODEL_PRICING_REGISTRY,
-)
 from .base import (
     ComputerUseSandboxClient,
     UnifiedSandboxClient,
 )
 from .utils import colorize, extract_config_info, measure_execution_time
+
+if TYPE_CHECKING:
+    from nanorollout.harness.agents.uda.controller import Controller
 
 # Decryption + grading is now driver-resident; see uda_env.driver.cocoa_v1
 # (host-side test.py.enc) and uda_env.driver.wildclaw_v1 (in-container
@@ -127,13 +125,24 @@ def _format_model_output_for_log(value: Any, max_chars: int = 8000) -> str:
 class TaskExecutor:
     """Executes tasks using a controller with agent feedback loop."""
 
-    def __init__(self, config: dict, controller: Controller | None = None):
+    def __init__(self, config: dict, controller: "Controller | None" = None):
         """Initialize TaskExecutor.
 
         Args:
             config: Configuration dictionary with optional 'controller' section
             controller: Controller instance (LLM or Human). If None, creates controller from config.
         """
+        from nanorollout.harness.agents.uda.controller import (
+            ClaudeLLM,
+            DeepSeekLLM,
+            GeminiLLM,
+            GLMLLM,
+            Human,
+            KimiLLM,
+            OpenAILLM,
+            QwenLLM,
+        )
+
         self.config = config
         
         logger.info(f"Config: {config}")
@@ -674,6 +683,8 @@ class TaskExecutor:
                 output_tokens = api_cost_stats.get("total_output_tokens", 0)
                 reasoning_tokens = api_cost_stats.get("total_reasoning_tokens", 0)
                 api_calls = api_cost_stats.get("api_calls", 0)
+                from nanorollout.harness.agents.uda.controller import MODEL_PRICING_REGISTRY
+
                 pricing = MODEL_PRICING_REGISTRY.get(str(model).lower(), {})
 
                 per_call = api_cost_stats.get("per_call_costs", [])

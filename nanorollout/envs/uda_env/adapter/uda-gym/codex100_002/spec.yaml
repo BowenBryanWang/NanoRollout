@@ -1,0 +1,9 @@
+family: ml-and-data-pipelines
+pattern: C
+primitives:
+  - uda-gui-training-experiment-monitor
+  - uda-gui-dashboard-metric-extraction
+  - uda-cli-multi-source-reconciliation
+  - uda-cli-data-quality-monitoring
+locations: dashboard+fs -> dashboard+fs -> fs
+anchor: Reconcile the W&B dashboard's live run states with stale local metric exports and QA drift files so only dashboard-finished, QA-passing runs are eligible for the model-selection artifact.

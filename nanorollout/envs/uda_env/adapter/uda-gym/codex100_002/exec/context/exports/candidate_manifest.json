@@ -1,0 +1,21 @@
+{
+  "project": "churn-retention-v3",
+  "baseline_run_id": "run-alpha-17",
+  "candidate_run_ids": [
+    "run-alpha-17",
+    "run-beta-09",
+    "run-gamma-31",
+    "run-delta-42",
+    "run-epsilon-28",
+    "run-zeta-03"
+  ],
+  "eligibility_rules": {
+    "status_authority": "seeded W&B dashboard",
+    "allowed_dashboard_states": ["finished"],
+    "max_psi": 0.10,
+    "max_null_rate_pct": 0.50,
+    "max_split_leakage_pct": 0.00,
+    "primary_metric": "val_f1",
+    "tie_break": "run_id ascending"
+  }
+}

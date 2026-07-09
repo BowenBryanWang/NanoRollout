@@ -1,0 +1,46 @@
+{
+  "thresholds": {
+    "f1_min": 0.85,
+    "p95_latency_ms_max": 250,
+    "cost_per_1k_usd_max": 0.80,
+    "eval_set_required": "holdout-v2",
+    "eval_n_min": 5000,
+    "state_required": "finished"
+  },
+  "reason_precedence": [
+    "status_crashed",
+    "status_running",
+    "eval_set_not_full_holdout",
+    "below_f1_threshold",
+    "latency_over_budget",
+    "cost_over_budget"
+  ],
+  "runs": [
+    {"run_id": "run-1",  "run_name": "amber-roberta-1",  "model": "roberta-large",    "state": "finished", "f1": 0.912, "em": 0.871, "p95_latency_ms": 410, "cost_per_1k_usd": 1.35, "eval_set": "holdout-v2", "eval_n": 5200, "deployable": false, "exclusion_reason": "latency_over_budget"},
+    {"run_id": "run-2",  "run_name": "brisk-distil-2",   "model": "distilbert-base",  "state": "finished", "f1": 0.864, "em": 0.812, "p95_latency_ms": 95,  "cost_per_1k_usd": 0.22, "eval_set": "holdout-v2", "eval_n": 5200, "deployable": true,  "exclusion_reason": ""},
+    {"run_id": "run-3",  "run_name": "calm-minilm-3",    "model": "minilm-l6",        "state": "finished", "f1": 0.851, "em": 0.802, "p95_latency_ms": 60,  "cost_per_1k_usd": 0.18, "eval_set": "holdout-v2", "eval_n": 5200, "deployable": true,  "exclusion_reason": ""},
+    {"run_id": "run-4",  "run_name": "dawn-electra-4",   "model": "electra-base",     "state": "finished", "f1": 0.889, "em": 0.840, "p95_latency_ms": 180, "cost_per_1k_usd": 0.74, "eval_set": "holdout-v2", "eval_n": 5200, "deployable": true,  "exclusion_reason": ""},
+    {"run_id": "run-5",  "run_name": "eager-deberta-5",  "model": "deberta-v3-large", "state": "finished", "f1": 0.921, "em": 0.882, "p95_latency_ms": 150, "cost_per_1k_usd": 0.69, "eval_set": "dev-500",   "eval_n": 500,  "deployable": false, "exclusion_reason": "eval_set_not_full_holdout"},
+    {"run_id": "run-6",  "run_name": "frost-tinybert-6", "model": "tinybert",         "state": "finished", "f1": 0.804, "em": 0.760, "p95_latency_ms": 40,  "cost_per_1k_usd": 0.12, "eval_set": "holdout-v2", "eval_n": 5200, "deployable": false, "exclusion_reason": "below_f1_threshold"},
+    {"run_id": "run-7",  "run_name": "gilded-roberta-7", "model": "roberta-large",    "state": "crashed",  "f1": 0.870, "em": 0.829, "p95_latency_ms": null, "cost_per_1k_usd": null, "eval_set": "holdout-v2", "eval_n": 3100, "deployable": false, "exclusion_reason": "status_crashed"},
+    {"run_id": "run-8",  "run_name": "hazel-electra-8",  "model": "electra-large",    "state": "running",  "f1": 0.905, "em": 0.861, "p95_latency_ms": null, "cost_per_1k_usd": null, "eval_set": "holdout-v2", "eval_n": 2600, "deployable": false, "exclusion_reason": "status_running"},
+    {"run_id": "run-9",  "run_name": "ivory-distil-9",   "model": "distilbert-base",  "state": "finished", "f1": 0.858, "em": 0.808, "p95_latency_ms": 240, "cost_per_1k_usd": 0.81, "eval_set": "holdout-v2", "eval_n": 5200, "deployable": false, "exclusion_reason": "cost_over_budget"},
+    {"run_id": "run-10", "run_name": "jade-minilm-10",   "model": "minilm-l12",       "state": "finished", "f1": 0.866, "em": 0.815, "p95_latency_ms": 250, "cost_per_1k_usd": 0.78, "eval_set": "holdout-v2", "eval_n": 5100, "deployable": true,  "exclusion_reason": ""}
+  ],
+  "expected_decision": {
+    "recommended_run_id": "run-4",
+    "recommended_run_name": "dawn-electra-4",
+    "recommended_model": "electra-base",
+    "recommended_f1": 0.889,
+    "deployable_run_ids": ["run-2", "run-3", "run-4", "run-10"],
+    "deployable_count": 4,
+    "excluded": {
+      "status_crashed": ["run-7"],
+      "status_running": ["run-8"],
+      "eval_set_not_full_holdout": ["run-5"],
+      "below_f1_threshold": ["run-6"],
+      "latency_over_budget": ["run-1"],
+      "cost_over_budget": ["run-9"]
+    }
+  }
+}

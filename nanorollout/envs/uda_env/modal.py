@@ -9,13 +9,101 @@ cocoa_env.modal at the runtime layer.
 
 from __future__ import annotations
 
+import hashlib
+import os
 import time
 import modal
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from .base import BaseSandboxRuntime, runtime_logger
+
+
+def _prepare_rest_lines(rest_lines: List[str]) -> List[str]:
+    """Patch a per-task Dockerfile's commands for Modal compatibility.
+
+    Three ports of the uda-desktop image expectations:
+
+    - Some per-task Dockerfiles run bare ``pip install`` but the base
+      image only ships ``/usr/bin/python3`` — no ``pip`` on ``PATH``.
+      Inject ``apt-get install -y python3-pip`` before the first such
+      line. Skip if the user already installed python3-pip themselves.
+    - Replace bare ``pip`` invocations with ``python3 -m pip`` so they
+      run via the system Python after we install pip via apt.
+    - Modal's ``dockerfile_commands`` parser rejects ``COPY --chown=...``
+      flags. Rewrite to plain ``COPY`` + a follow-up ``RUN chown -R``.
+    """
+    import re as _re
+
+    rewritten: List[str] = []
+    for line in rest_lines:
+        m = _re.match(
+            r"^(\s*)COPY\s+--chown=([^\s]+)\s+(.+)$", line
+        )
+        if m:
+            indent, ownership, args = m.groups()
+            rewritten.append(f"{indent}COPY {args}")
+            target = args.split()[-1]
+            rewritten.append(f"{indent}RUN chown -R {ownership} {target}")
+        else:
+            rewritten.append(line)
+    rest_lines = rewritten
+    needs_pip = any(
+        line.lstrip().startswith(("RUN pip ", "RUN pip3 "))
+        for line in rest_lines
+    )
+    if not needs_pip:
+        return list(rest_lines)
+    already_installs_pip = any(
+        "python3-pip" in line and "apt" in line for line in rest_lines
+    )
+    out: List[str] = []
+    if not already_installs_pip:
+        out.append(
+            "RUN apt-get update && apt-get install -y --no-install-recommends "
+            "python3-pip && rm -rf /var/lib/apt/lists/*"
+        )
+    for line in rest_lines:
+        s = line.lstrip()
+        if s.startswith("RUN pip "):
+            line = line.replace("RUN pip ", "RUN python3 -m pip ", 1)
+        elif s.startswith("RUN pip3 "):
+            line = line.replace("RUN pip3 ", "RUN python3 -m pip ", 1)
+        out.append(line)
+    return out
+
+
+def _parse_dockerfile(path: Path) -> Tuple[str, List[str]]:
+    """Split a per-task Dockerfile into ``(FROM image, remaining lines)``.
+
+    Used by the registry-secret code path: Modal's ``Image.from_registry``
+    handles the pull (with auth) and ``Image.dockerfile_commands`` applies
+    everything else. The per-task Dockerfiles in ``adapter/<bench>/`` are
+    deliberately tiny (5–10 lines) and always start with ``FROM``, so a
+    line-based parser is enough — no need for a real Dockerfile grammar.
+    """
+    lines = path.read_text(encoding="utf-8").splitlines()
+    base_image: Optional[str] = None
+    rest: List[str] = []
+    for raw in lines:
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if base_image is None and stripped.upper().startswith("FROM "):
+            tokens = stripped.split()
+            # Skip ``--platform=...`` flag if present.
+            image_tok = next(
+                (tok for tok in tokens[1:] if not tok.startswith("--")), None
+            )
+            if image_tok is None:
+                raise ValueError(f"Could not parse FROM line in {path}")
+            base_image = image_tok
+            continue
+        rest.append(raw)
+    if base_image is None:
+        raise ValueError(f"No FROM line in Dockerfile {path}")
+    return base_image, rest
 
 
 class ModalSandboxRuntime(BaseSandboxRuntime):
@@ -49,19 +137,48 @@ class ModalSandboxRuntime(BaseSandboxRuntime):
 
             app_name = self.client.sandbox_config.get("modal_app_name", "__nanorollout_uda__")
             bench = (self.client.sandbox_config.get("bench") or "uda").strip() or "uda"
+            # Modal sandbox names are capped at 64 chars. Bench + raw
+            # task_name + epoch can overflow (e.g. wildclaw's long
+            # ``06_Safety_Alignment_task_*`` ids), so fall back to a
+            # task-name hash when the natural name is too long.
+            default_name = f"uda-{bench}-{task_name}-{int(time.time())}"
+            if len(default_name) >= 64:
+                digest = hashlib.sha256(task_name.encode("utf-8")).hexdigest()[:10]
+                default_name = f"uda-{bench}-{digest}-{int(time.time())}"
             sandbox_name = (
                 self.client.sandbox_config.get("modal_sandbox_name")
-                or f"uda-{bench}-{task_name}-{int(time.time())}"
+                or default_name
             )
             startup_timeout = int(self.client.sandbox_config.get("modal_startup_timeout", 300))
             sandbox_timeout = int(self.client.sandbox_config.get("modal_timeout", 3600))
             idle_timeout = self.client.sandbox_config.get("modal_idle_timeout", 600)
 
             self.app = modal.App.lookup(app_name, create_if_missing=True)
-            image = modal.Image.from_dockerfile(
-                str(dockerfile_path.resolve()),
-                context_dir=str(task_path.resolve()),
+
+            # If a registry secret is configured (e.g. private ghcr image),
+            # Modal's ``Image.from_dockerfile`` can't authenticate the FROM
+            # line — it has no ``secret=`` knob. Reconstruct the image as
+            # ``from_registry(base, secret).dockerfile_commands(rest)``
+            # so the base image pull carries credentials.
+            registry_secret_name = (
+                self.client.sandbox_config.get("modal_registry_secret")
+                or os.environ.get("UDA_MODAL_REGISTRY_SECRET")
             )
+            if registry_secret_name:
+                base_image, rest_lines = _parse_dockerfile(dockerfile_path)
+                secret = modal.Secret.from_name(registry_secret_name)
+                image = modal.Image.from_registry(base_image, secret=secret)
+                if rest_lines:
+                    rest_lines = _prepare_rest_lines(rest_lines)
+                    image = image.dockerfile_commands(
+                        rest_lines,
+                        context_dir=str(task_path.resolve()),
+                    )
+            else:
+                image = modal.Image.from_dockerfile(
+                    str(dockerfile_path.resolve()),
+                    context_dir=str(task_path.resolve()),
+                )
 
             create_kwargs: Dict[str, Any] = {
                 "app": self.app,

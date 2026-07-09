@@ -1,0 +1,165 @@
+{
+  "currentUser": {
+    "id": "user-1",
+    "username": "priya-mle",
+    "name": "Priya Nair",
+    "email": "priya@acme-nlp.example",
+    "avatar": null,
+    "teams": ["qa-platform"],
+    "defaultEntity": "acme-nlp"
+  },
+  "users": [
+    {"id": "user-1", "username": "priya-mle", "name": "Priya Nair", "email": "priya@acme-nlp.example", "avatar": null},
+    {"id": "user-2", "username": "deshawn-ds", "name": "DeShawn Carter", "email": "deshawn@acme-nlp.example", "avatar": null}
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "qa-eval",
+      "displayName": "QA Eval",
+      "entity": "acme-nlp",
+      "description": "Extractive-QA candidate models evaluated for the support-assistant deployment slot.",
+      "visibility": "private",
+      "createdAt": "2026-06-10T09:00:00Z",
+      "updatedAt": "2026-06-28T18:40:00Z",
+      "totalRuns": 10,
+      "totalComputeHours": 211.4,
+      "tags": ["qa", "model-eval", "deployment"]
+    }
+  ],
+  "runs": [
+    {
+      "id": "run-1", "runId": "am1roberta", "name": "amber-roberta-1", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-12T08:10:00Z", "updatedAt": "2026-06-12T13:55:00Z",
+      "duration": 20700, "color": "#e6194b", "visible": true, "user": "priya-mle",
+      "tags": ["roberta", "candidate"],
+      "notes": "RoBERTa-large, best raw F1 so far. Heavy: latency and serving cost are high.",
+      "config": {"model": "roberta-large", "eval_set": "holdout-v2", "eval_n": 5200, "learning_rate": 1e-5, "batch_size": 16, "epochs": 3},
+      "summary": {"f1": 0.912, "em": 0.871, "p95_latency_ms": 410, "cost_per_1k_usd": 1.35, "epoch": 3},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A100 40GB", "gitCommit": "9c1aa20"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-2", "runId": "br2distil", "name": "brisk-distil-2", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-14T10:05:00Z", "updatedAt": "2026-06-14T12:20:00Z",
+      "duration": 8100, "color": "#3cb44b", "visible": true, "user": "deshawn-ds",
+      "tags": ["distilbert", "candidate"],
+      "notes": "DistilBERT baseline. Cheap and fast on the full holdout.",
+      "config": {"model": "distilbert-base", "eval_set": "holdout-v2", "eval_n": 5200, "learning_rate": 3e-5, "batch_size": 32, "epochs": 4},
+      "summary": {"f1": 0.864, "em": 0.812, "p95_latency_ms": 95, "cost_per_1k_usd": 0.22, "epoch": 4},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA T4", "gitCommit": "9c1aa20"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-3", "runId": "ca3minilm", "name": "calm-minilm-3", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-15T09:40:00Z", "updatedAt": "2026-06-15T11:05:00Z",
+      "duration": 5100, "color": "#4363d8", "visible": true, "user": "deshawn-ds",
+      "tags": ["minilm", "candidate"],
+      "notes": "MiniLM L6, very cheap. Right at the F1 floor.",
+      "config": {"model": "minilm-l6", "eval_set": "holdout-v2", "eval_n": 5200, "learning_rate": 4e-5, "batch_size": 64, "epochs": 5},
+      "summary": {"f1": 0.851, "em": 0.802, "p95_latency_ms": 60, "cost_per_1k_usd": 0.18, "epoch": 5},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA T4", "gitCommit": "1f7be03"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-4", "runId": "da4electra", "name": "dawn-electra-4", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-18T14:00:00Z", "updatedAt": "2026-06-18T17:30:00Z",
+      "duration": 12600, "color": "#f58231", "visible": true, "user": "priya-mle",
+      "tags": ["electra", "candidate"],
+      "notes": "ELECTRA-base on the full holdout. Strong F1, comfortably inside the latency and cost budgets.",
+      "config": {"model": "electra-base", "eval_set": "holdout-v2", "eval_n": 5200, "learning_rate": 2e-5, "batch_size": 32, "epochs": 4},
+      "summary": {"f1": 0.889, "em": 0.840, "p95_latency_ms": 180, "cost_per_1k_usd": 0.74, "epoch": 4},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A10", "gitCommit": "1f7be03"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-5", "runId": "ea5deberta", "name": "eager-deberta-5", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-20T11:15:00Z", "updatedAt": "2026-06-20T12:05:00Z",
+      "duration": 3000, "color": "#911eb4", "visible": true, "user": "priya-mle",
+      "tags": ["deberta", "candidate"],
+      "notes": "DeBERTa-v3-large, top F1 of the bunch -- but this was a quick smoke eval on the 500-example dev split, not the holdout. Needs a full re-run before it counts.",
+      "config": {"model": "deberta-v3-large", "eval_set": "dev-500", "eval_n": 500, "learning_rate": 1e-5, "batch_size": 16, "epochs": 3},
+      "summary": {"f1": 0.921, "em": 0.882, "p95_latency_ms": 150, "cost_per_1k_usd": 0.69, "epoch": 3},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A10", "gitCommit": "44de9aa"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-6", "runId": "fr6tiny", "name": "frost-tinybert-6", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-21T08:25:00Z", "updatedAt": "2026-06-21T09:10:00Z",
+      "duration": 2700, "color": "#46f0f0", "visible": true, "user": "deshawn-ds",
+      "tags": ["tinybert", "candidate"],
+      "notes": "TinyBERT, cheapest option. F1 falls below the deployment floor.",
+      "config": {"model": "tinybert", "eval_set": "holdout-v2", "eval_n": 5200, "learning_rate": 5e-5, "batch_size": 64, "epochs": 6},
+      "summary": {"f1": 0.804, "em": 0.760, "p95_latency_ms": 40, "cost_per_1k_usd": 0.12, "epoch": 6},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA T4", "gitCommit": "44de9aa"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-7", "runId": "gi7roberta", "name": "gilded-roberta-7", "projectId": "proj-1",
+      "state": "crashed", "createdAt": "2026-06-23T13:30:00Z", "updatedAt": "2026-06-23T15:02:00Z",
+      "duration": 5520, "color": "#f032e6", "visible": true, "user": "priya-mle",
+      "tags": ["roberta", "candidate"],
+      "notes": "RoBERTa-large rerun -- OOM-crashed partway through eval (got through ~3100 of holdout-v2). Partial F1 only.",
+      "config": {"model": "roberta-large", "eval_set": "holdout-v2", "eval_n": 3100, "learning_rate": 1e-5, "batch_size": 16, "epochs": 3},
+      "summary": {"f1": 0.870, "em": 0.829, "epoch": 2},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A100 40GB", "gitCommit": "70b1c5e"},
+      "logs": [{"timestamp": "2026-06-23T15:02:00Z", "level": "ERROR", "message": "CUDA out of memory; run terminated"}],
+      "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-8", "runId": "ha8electra", "name": "hazel-electra-8", "projectId": "proj-1",
+      "state": "running", "createdAt": "2026-06-29T07:45:00Z", "updatedAt": "2026-06-29T11:20:00Z",
+      "duration": 12900, "color": "#bcf60c", "visible": true, "user": "priya-mle",
+      "tags": ["electra", "candidate"],
+      "notes": "ELECTRA-large, still evaluating (~2600/5200 done). Live F1 looks great but it is not finished.",
+      "config": {"model": "electra-large", "eval_set": "holdout-v2", "eval_n": 2600, "learning_rate": 1e-5, "batch_size": 16, "epochs": 4},
+      "summary": {"f1": 0.905, "em": 0.861, "epoch": 4},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A100 40GB", "gitCommit": "70b1c5e"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-9", "runId": "iv9distil", "name": "ivory-distil-9", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-26T10:00:00Z", "updatedAt": "2026-06-26T12:35:00Z",
+      "duration": 9300, "color": "#fabebe", "visible": true, "user": "deshawn-ds",
+      "tags": ["distilbert", "candidate"],
+      "notes": "DistilBERT with a larger sequence window. Good F1 but serving cost crept just over the ceiling.",
+      "config": {"model": "distilbert-base", "eval_set": "holdout-v2", "eval_n": 5200, "learning_rate": 3e-5, "batch_size": 32, "epochs": 4},
+      "summary": {"f1": 0.858, "em": 0.808, "p95_latency_ms": 240, "cost_per_1k_usd": 0.81, "epoch": 4},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A10", "gitCommit": "70b1c5e"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    },
+    {
+      "id": "run-10", "runId": "ja10minilm", "name": "jade-minilm-10", "projectId": "proj-1",
+      "state": "finished", "createdAt": "2026-06-27T09:20:00Z", "updatedAt": "2026-06-27T11:00:00Z",
+      "duration": 6000, "color": "#008080", "visible": true, "user": "deshawn-ds",
+      "tags": ["minilm", "candidate"],
+      "notes": "MiniLM L12 on the full holdout. Sits right at the latency budget.",
+      "config": {"model": "minilm-l12", "eval_set": "holdout-v2", "eval_n": 5100, "learning_rate": 4e-5, "batch_size": 64, "epochs": 5},
+      "summary": {"f1": 0.866, "em": 0.815, "p95_latency_ms": 250, "cost_per_1k_usd": 0.78, "epoch": 5},
+      "history": [], "systemMetrics": [], "metadata": {"framework": "PyTorch 2.1.0", "gpu": "NVIDIA A10", "gitCommit": "70b1c5e"},
+      "logs": [], "files": [], "inputArtifacts": [], "outputArtifacts": []
+    }
+  ],
+  "sweeps": [],
+  "artifacts": [],
+  "reports": [],
+  "activeProjectId": "proj-1",
+  "activeRunId": null,
+  "selectedRunIds": [],
+  "workspace": {
+    "panelSections": [
+      {"id": "section-1", "name": "Charts", "collapsed": false, "panels": [
+        {"id": "panel-1", "type": "run_table", "metric": "f1", "title": "Runs"}
+      ]}
+    ],
+    "runTableColumns": ["name", "state", "f1", "em", "p95_latency_ms", "cost_per_1k_usd", "config.model", "config.eval_set", "config.eval_n"],
+    "sortBy": "createdAt",
+    "sortOrder": "desc",
+    "filters": [],
+    "groupBy": null
+  },
+  "notifications": [
+    {"id": "notif-1", "type": "run_crashed", "runName": "gilded-roberta-7", "timestamp": "2026-06-23T15:02:00Z", "read": false},
+    {"id": "notif-2", "type": "run_finished", "runName": "jade-minilm-10", "timestamp": "2026-06-27T11:00:00Z", "read": false}
+  ]
+}

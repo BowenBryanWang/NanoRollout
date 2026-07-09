@@ -1,0 +1,32 @@
+id: 20260629_p002_ml_runs
+family: ml-and-data-pipelines
+pattern: D
+primitives:
+  gui:
+    - uda-gui-dashboard-metric-extraction
+    - uda-gui-data-table-sort-filter
+  cli:
+    - uda-cli-multi-source-reconciliation
+locations:
+  spec: prompt                   # deployment policy / SLOs stated in the prompt
+  input: dashboard               # per-run metrics + state live only in the seeded W&B dashboard
+  deliverable: fs                # structured CSV + JSON under results/
+anchor: >
+  Pick the single QA/model-eval run that is actually deployable out of a seeded W&B
+  project of ten runs, then justify the exclusion of every other run with a deterministic
+  reason code. The metrics that decide it (F1, exact-match, p95 latency, $/1k cost, which
+  eval set each run used and how many examples) live only on the dashboard's per-run pages,
+  not in any local file, so they must be mined panel-by-panel. The naive "highest F1" pick
+  is a trap twice over: the top-F1 run (deberta, 0.921) was scored on a 500-example dev
+  split rather than the official holdout-v2 (>=5000), and the second-highest (roberta,
+  0.912) blows both the 250 ms p95 budget and the $0.80/1k cost ceiling. A crashed run and
+  a still-running run also carry tempting partial F1s and must be excluded on status. The
+  correct deployable set is exactly four finished runs and the winner is the electra-base
+  run at F1 0.889 — only reachable by reconciling five constraints with a fixed exclusion
+  precedence (status -> eval_set -> f1 -> latency -> cost) against per-run dashboard state.
+notes: >
+  Cross-interface essentiality: every deciding metric is runtime state of the deployed W&B
+  mock (injected, not on disk), so the GUI inspection is load-bearing; the multi-constraint
+  reconciliation + precedence-ordered exclusion + selection is the non-trivial CLI/table
+  half. Neither side is decorative. Deliverables are machine-verifiable (CSV with fixed
+  columns + decision JSON), no prose report.

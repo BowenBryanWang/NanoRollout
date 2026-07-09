@@ -1,0 +1,28 @@
+surfaces:
+  spec:
+    declared: dashboard+fs
+    realized_as: cua_mock_website
+    mock: wandb_mock
+    entrypoints:
+      - https://cua-gym-wandb.xlang.ai
+      - /tmp_workspace/context/exports/
+    stateful: true
+    verifier_readback: Harness-only GET https://cua-gym-wandb.xlang.ai/go?sid=<real sid> with CUA_GYM_ADMIN_TOKEN confirms the seeded W&B project and live run states used by the task.
+  input:
+    declared: dashboard+fs
+    realized_as: cua_mock_website
+    mock: wandb_mock
+    entrypoints:
+      - https://cua-gym-wandb.xlang.ai
+      - /tmp_workspace/context/exports/run_metrics_export.csv
+      - /tmp_workspace/context/exports/qa_drift_checks.csv
+      - /tmp_workspace/context/exports/candidate_manifest.json
+    stateful: true
+    verifier_readback: Harness-only GET https://cua-gym-wandb.xlang.ai/go?sid=<real sid> with CUA_GYM_ADMIN_TOKEN exposes current_state.runs while local files provide deterministic QA and metric evidence.
+  deliverable:
+    declared: fs
+    realized_as: fs
+    entrypoints:
+      - /tmp_workspace/results/model_selection.json
+    stateful: false
+    verifier_readback: The JSON result file can be parsed and checked against the reconciled dashboard state and local QA exports.

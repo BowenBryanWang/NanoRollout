@@ -157,6 +157,7 @@ def discover_workspace_assets(task_dir: Path) -> Dict[str, Path]:
     """
     candidates = {
         "exec": task_dir / "exec",
+        "hidden": task_dir / "hidden",
         "gt": task_dir / "gt",
         "skills": task_dir / "skills",
         "task_yaml": task_dir / "task.yaml",
@@ -167,7 +168,11 @@ def discover_workspace_assets(task_dir: Path) -> Dict[str, Path]:
         "test_py_enc": task_dir / "test.py.enc",
         "canary": task_dir / "canary.txt",
         "meta": task_dir / "meta.json",
+        "runtime_yaml": task_dir / "runtime.yaml",
         "env_tsv": task_dir / "env.tsv",
+        "harness_env_tsv": task_dir / "harness_env.tsv",
+        "setup_sh": task_dir / "setup.sh",
+        "check_sh": task_dir / "check.sh",
         "warmup_sh": task_dir / "warmup.sh",
     }
     return {k: v for k, v in candidates.items() if v.exists()}

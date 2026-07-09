@@ -1,0 +1,498 @@
+{
+  "admin_token_env": "CUA_GYM_ADMIN_TOKEN",
+  "admin_token_remote_file": "/home/ubuntu/.cua-gym-hub-admin-token",
+  "mocks": {
+    "12306_mock": {
+      "base_url": "https://cua-gym-12306.xlang.ai",
+      "public_host": "cua-gym-12306.xlang.ai",
+      "requires_admin_token": true
+    },
+    "adp_mock": {
+      "base_url": "https://cua-gym-adp.xlang.ai",
+      "public_host": "cua-gym-adp.xlang.ai",
+      "requires_admin_token": true
+    },
+    "airtable_mock": {
+      "base_url": "https://cua-gym-airtable.xlang.ai",
+      "public_host": "cua-gym-airtable.xlang.ai",
+      "requires_admin_token": true
+    },
+    "aliyun_mock": {
+      "base_url": "https://cua-gym-aliyun.xlang.ai",
+      "public_host": "cua-gym-aliyun.xlang.ai",
+      "requires_admin_token": true
+    },
+    "amazon_mock": {
+      "base_url": "https://cua-gym-amazon.xlang.ai",
+      "public_host": "cua-gym-amazon.xlang.ai",
+      "requires_admin_token": true
+    },
+    "amazon_seller_mock": {
+      "base_url": "https://cua-gym-amazon-seller.xlang.ai",
+      "public_host": "cua-gym-amazon-seller.xlang.ai",
+      "requires_admin_token": true
+    },
+    "amplitude_mock": {
+      "base_url": "https://cua-gym-amplitude.xlang.ai",
+      "public_host": "cua-gym-amplitude.xlang.ai",
+      "requires_admin_token": true
+    },
+    "asana_mock": {
+      "base_url": "https://cua-gym-asana.xlang.ai",
+      "public_host": "cua-gym-asana.xlang.ai",
+      "requires_admin_token": true
+    },
+    "aws_console_mock": {
+      "base_url": "https://cua-gym-aws-console.xlang.ai",
+      "public_host": "cua-gym-aws-console.xlang.ai",
+      "requires_admin_token": true
+    },
+    "azure_mock": {
+      "base_url": "https://cua-gym-azure.xlang.ai",
+      "public_host": "cua-gym-azure.xlang.ai",
+      "requires_admin_token": true
+    },
+    "bamboohr_mock": {
+      "base_url": "https://cua-gym-bamboohr.xlang.ai",
+      "public_host": "cua-gym-bamboohr.xlang.ai",
+      "requires_admin_token": true
+    },
+    "booking_com_mock": {
+      "base_url": "https://cua-gym-booking-com.xlang.ai",
+      "public_host": "cua-gym-booking-com.xlang.ai",
+      "requires_admin_token": true
+    },
+    "canva_mock": {
+      "base_url": "https://cua-gym-canva.xlang.ai",
+      "public_host": "cua-gym-canva.xlang.ai",
+      "requires_admin_token": true
+    },
+    "canvas_lms_mock": {
+      "base_url": "https://cua-gym-canvas-lms.xlang.ai",
+      "public_host": "cua-gym-canvas-lms.xlang.ai",
+      "requires_admin_token": true
+    },
+    "canvas_mock": {
+      "base_url": "https://cua-gym-canvas.xlang.ai",
+      "public_host": "cua-gym-canvas.xlang.ai",
+      "requires_admin_token": true
+    },
+    "circleci_mock": {
+      "base_url": "https://cua-gym-circleci.xlang.ai",
+      "public_host": "cua-gym-circleci.xlang.ai",
+      "requires_admin_token": true
+    },
+    "clio_mock": {
+      "base_url": "https://cua-gym-clio.xlang.ai",
+      "public_host": "cua-gym-clio.xlang.ai",
+      "requires_admin_token": true
+    },
+    "cloudflare_mock": {
+      "base_url": "https://cua-gym-cloudflare.xlang.ai",
+      "public_host": "cua-gym-cloudflare.xlang.ai",
+      "requires_admin_token": true
+    },
+    "coinbase_mock": {
+      "base_url": "https://cua-gym-coinbase.xlang.ai",
+      "public_host": "cua-gym-coinbase.xlang.ai",
+      "requires_admin_token": true
+    },
+    "confluence_mock": {
+      "base_url": "https://cua-gym-confluence.xlang.ai",
+      "public_host": "cua-gym-confluence.xlang.ai",
+      "requires_admin_token": true
+    },
+    "contractbook_mock": {
+      "base_url": "https://cua-gym-contractbook.xlang.ai",
+      "public_host": "cua-gym-contractbook.xlang.ai",
+      "requires_admin_token": true
+    },
+    "datadog_mock": {
+      "base_url": "https://cua-gym-datadog.xlang.ai",
+      "public_host": "cua-gym-datadog.xlang.ai",
+      "requires_admin_token": true
+    },
+    "dingtalk_mock": {
+      "base_url": "https://cua-gym-dingtalk.xlang.ai",
+      "public_host": "cua-gym-dingtalk.xlang.ai",
+      "requires_admin_token": true
+    },
+    "discord_mock": {
+      "base_url": "https://cua-gym-discord.xlang.ai",
+      "public_host": "cua-gym-discord.xlang.ai",
+      "requires_admin_token": true
+    },
+    "docusign_mock": {
+      "base_url": "https://cua-gym-docusign.xlang.ai",
+      "public_host": "cua-gym-docusign.xlang.ai",
+      "requires_admin_token": true
+    },
+    "ebay_mock": {
+      "base_url": "https://cua-gym-ebay.xlang.ai",
+      "public_host": "cua-gym-ebay.xlang.ai",
+      "requires_admin_token": true
+    },
+    "epic_health_mock": {
+      "base_url": "https://cua-gym-epic-health.xlang.ai",
+      "public_host": "cua-gym-epic-health.xlang.ai",
+      "requires_admin_token": true
+    },
+    "expedia_mock": {
+      "base_url": "https://cua-gym-expedia.xlang.ai",
+      "public_host": "cua-gym-expedia.xlang.ai",
+      "requires_admin_token": true
+    },
+    "expensify_mock": {
+      "base_url": "https://cua-gym-expensify.xlang.ai",
+      "public_host": "cua-gym-expensify.xlang.ai",
+      "requires_admin_token": true
+    },
+    "facebook_mock": {
+      "base_url": "https://cua-gym-facebook.xlang.ai",
+      "public_host": "cua-gym-facebook.xlang.ai",
+      "requires_admin_token": true
+    },
+    "feishu_mock": {
+      "base_url": "https://cua-gym-feishu.xlang.ai",
+      "public_host": "cua-gym-feishu.xlang.ai",
+      "requires_admin_token": true
+    },
+    "github_mock": {
+      "base_url": "https://cua-gym-github.xlang.ai",
+      "public_host": "cua-gym-github.xlang.ai",
+      "requires_admin_token": true
+    },
+    "gitlab_mock": {
+      "base_url": "https://cua-gym-gitlab.xlang.ai",
+      "public_host": "cua-gym-gitlab.xlang.ai",
+      "requires_admin_token": true
+    },
+    "gmail_mock": {
+      "base_url": "https://cua-gym-gmail.xlang.ai",
+      "public_host": "cua-gym-gmail.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_ads_mock": {
+      "base_url": "https://cua-gym-google-ads.xlang.ai",
+      "public_host": "cua-gym-google-ads.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_analytics_mock": {
+      "base_url": "https://cua-gym-google-analytics.xlang.ai",
+      "public_host": "cua-gym-google-analytics.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_calendar_mock": {
+      "base_url": "https://cua-gym-google-calendar.xlang.ai",
+      "public_host": "cua-gym-google-calendar.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_docs_mock": {
+      "base_url": "https://cua-gym-google-docs.xlang.ai",
+      "public_host": "cua-gym-google-docs.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_drive_mock": {
+      "base_url": "https://cua-gym-google-drive.xlang.ai",
+      "public_host": "cua-gym-google-drive.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_flights_mock": {
+      "base_url": "https://cua-gym-google-flights.xlang.ai",
+      "public_host": "cua-gym-google-flights.xlang.ai",
+      "requires_admin_token": true
+    },
+    "google_sheets_mock": {
+      "base_url": "https://cua-gym-google-sheets.xlang.ai",
+      "public_host": "cua-gym-google-sheets.xlang.ai",
+      "requires_admin_token": true
+    },
+    "greenhouse_mock": {
+      "base_url": "https://cua-gym-greenhouse.xlang.ai",
+      "public_host": "cua-gym-greenhouse.xlang.ai",
+      "requires_admin_token": true
+    },
+    "gusto_mock": {
+      "base_url": "https://cua-gym-gusto.xlang.ai",
+      "public_host": "cua-gym-gusto.xlang.ai",
+      "requires_admin_token": true
+    },
+    "hotjar_mock": {
+      "base_url": "https://cua-gym-hotjar.xlang.ai",
+      "public_host": "cua-gym-hotjar.xlang.ai",
+      "requires_admin_token": true
+    },
+    "hubspot_marketing_mock": {
+      "base_url": "https://cua-gym-hubspot-marketing.xlang.ai",
+      "public_host": "cua-gym-hubspot-marketing.xlang.ai",
+      "requires_admin_token": true
+    },
+    "hubspot_mock": {
+      "base_url": "https://cua-gym-hubspot.xlang.ai",
+      "public_host": "cua-gym-hubspot.xlang.ai",
+      "requires_admin_token": true
+    },
+    "instacart_mock": {
+      "base_url": "https://cua-gym-instacart.xlang.ai",
+      "public_host": "cua-gym-instacart.xlang.ai",
+      "requires_admin_token": true
+    },
+    "instagram_mock": {
+      "base_url": "https://cua-gym-instagram.xlang.ai",
+      "public_host": "cua-gym-instagram.xlang.ai",
+      "requires_admin_token": true
+    },
+    "jira_mock": {
+      "base_url": "https://cua-gym-jira.xlang.ai",
+      "public_host": "cua-gym-jira.xlang.ai",
+      "requires_admin_token": true
+    },
+    "klaviyo_mock": {
+      "base_url": "https://cua-gym-klaviyo.xlang.ai",
+      "public_host": "cua-gym-klaviyo.xlang.ai",
+      "requires_admin_token": true
+    },
+    "lattice_mock": {
+      "base_url": "https://cua-gym-lattice.xlang.ai",
+      "public_host": "cua-gym-lattice.xlang.ai",
+      "requires_admin_token": true
+    },
+    "linear_mock": {
+      "base_url": "https://cua-gym-linear.xlang.ai",
+      "public_host": "cua-gym-linear.xlang.ai",
+      "requires_admin_token": true
+    },
+    "linkedin_mock": {
+      "base_url": "https://cua-gym-linkedin.xlang.ai",
+      "public_host": "cua-gym-linkedin.xlang.ai",
+      "requires_admin_token": true
+    },
+    "looker_studio_mock": {
+      "base_url": "https://cua-gym-looker-studio.xlang.ai",
+      "public_host": "cua-gym-looker-studio.xlang.ai",
+      "requires_admin_token": true
+    },
+    "lucidchart_mock": {
+      "base_url": "https://cua-gym-lucidchart.xlang.ai",
+      "public_host": "cua-gym-lucidchart.xlang.ai",
+      "requires_admin_token": true
+    },
+    "mailchimp_mock": {
+      "base_url": "https://cua-gym-mailchimp.xlang.ai",
+      "public_host": "cua-gym-mailchimp.xlang.ai",
+      "requires_admin_token": true
+    },
+    "meta_ads_mock": {
+      "base_url": "https://cua-gym-meta-ads.xlang.ai",
+      "public_host": "cua-gym-meta-ads.xlang.ai",
+      "requires_admin_token": true
+    },
+    "microsoft_teams_mock": {
+      "base_url": "https://cua-gym-microsoft-teams.xlang.ai",
+      "public_host": "cua-gym-microsoft-teams.xlang.ai",
+      "requires_admin_token": true
+    },
+    "miro_mock": {
+      "base_url": "https://cua-gym-miro.xlang.ai",
+      "public_host": "cua-gym-miro.xlang.ai",
+      "requires_admin_token": true
+    },
+    "mixpanel_mock": {
+      "base_url": "https://cua-gym-mixpanel.xlang.ai",
+      "public_host": "cua-gym-mixpanel.xlang.ai",
+      "requires_admin_token": true
+    },
+    "monday_mock": {
+      "base_url": "https://cua-gym-monday.xlang.ai",
+      "public_host": "cua-gym-monday.xlang.ai",
+      "requires_admin_token": true
+    },
+    "notion_mock": {
+      "base_url": "https://cua-gym-notion.xlang.ai",
+      "public_host": "cua-gym-notion.xlang.ai",
+      "requires_admin_token": true
+    },
+    "openreview_mock": {
+      "base_url": "https://cua-gym-openreview.xlang.ai",
+      "public_host": "cua-gym-openreview.xlang.ai",
+      "requires_admin_token": true
+    },
+    "outlook_web_mock": {
+      "base_url": "https://cua-gym-outlook-web.xlang.ai",
+      "public_host": "cua-gym-outlook-web.xlang.ai",
+      "requires_admin_token": true
+    },
+    "pacs_viewer_mock": {
+      "base_url": "https://cua-gym-pacs-viewer.xlang.ai",
+      "public_host": "cua-gym-pacs-viewer.xlang.ai",
+      "requires_admin_token": true
+    },
+    "paypal_mock": {
+      "base_url": "https://cua-gym-paypal.xlang.ai",
+      "public_host": "cua-gym-paypal.xlang.ai",
+      "requires_admin_token": true
+    },
+    "pinterest_mock": {
+      "base_url": "https://cua-gym-pinterest.xlang.ai",
+      "public_host": "cua-gym-pinterest.xlang.ai",
+      "requires_admin_token": true
+    },
+    "postman_mock": {
+      "base_url": "https://cua-gym-postman.xlang.ai",
+      "public_host": "cua-gym-postman.xlang.ai",
+      "requires_admin_token": true
+    },
+    "quickbooks_mock": {
+      "base_url": "https://cua-gym-quickbooks.xlang.ai",
+      "public_host": "cua-gym-quickbooks.xlang.ai",
+      "requires_admin_token": true
+    },
+    "reddit_mock": {
+      "base_url": "https://cua-gym-reddit.xlang.ai",
+      "public_host": "cua-gym-reddit.xlang.ai",
+      "requires_admin_token": true
+    },
+    "robinhood_mock": {
+      "base_url": "https://cua-gym-robinhood.xlang.ai",
+      "public_host": "cua-gym-robinhood.xlang.ai",
+      "requires_admin_token": true
+    },
+    "salesforce_mock": {
+      "base_url": "https://cua-gym-salesforce.xlang.ai",
+      "public_host": "cua-gym-salesforce.xlang.ai",
+      "requires_admin_token": true
+    },
+    "sap_mock": {
+      "base_url": "https://cua-gym-sap.xlang.ai",
+      "public_host": "cua-gym-sap.xlang.ai",
+      "requires_admin_token": true
+    },
+    "sentry_mock": {
+      "base_url": "https://cua-gym-sentry.xlang.ai",
+      "public_host": "cua-gym-sentry.xlang.ai",
+      "requires_admin_token": true
+    },
+    "servicenow_mock": {
+      "base_url": "https://cua-gym-servicenow.xlang.ai",
+      "public_host": "cua-gym-servicenow.xlang.ai",
+      "requires_admin_token": true
+    },
+    "shopify_admin_mock": {
+      "base_url": "https://cua-gym-shopify-admin.xlang.ai",
+      "public_host": "cua-gym-shopify-admin.xlang.ai",
+      "requires_admin_token": true
+    },
+    "slack_mock": {
+      "base_url": "https://cua-gym-slack.xlang.ai",
+      "public_host": "cua-gym-slack.xlang.ai",
+      "requires_admin_token": true
+    },
+    "stripe_dashboard_mock": {
+      "base_url": "https://cua-gym-stripe-dashboard.xlang.ai",
+      "public_host": "cua-gym-stripe-dashboard.xlang.ai",
+      "requires_admin_token": true
+    },
+    "tableau_mock": {
+      "base_url": "https://cua-gym-tableau.xlang.ai",
+      "public_host": "cua-gym-tableau.xlang.ai",
+      "requires_admin_token": true
+    },
+    "taobao_seller_mock": {
+      "base_url": "https://cua-gym-taobao-seller.xlang.ai",
+      "public_host": "cua-gym-taobao-seller.xlang.ai",
+      "requires_admin_token": true
+    },
+    "tradingview_mock": {
+      "base_url": "https://cua-gym-tradingview.xlang.ai",
+      "public_host": "cua-gym-tradingview.xlang.ai",
+      "requires_admin_token": true
+    },
+    "trello_mock": {
+      "base_url": "https://cua-gym-trello.xlang.ai",
+      "public_host": "cua-gym-trello.xlang.ai",
+      "requires_admin_token": true
+    },
+    "tripadvisor_mock": {
+      "base_url": "https://cua-gym-tripadvisor.xlang.ai",
+      "public_host": "cua-gym-tripadvisor.xlang.ai",
+      "requires_admin_token": true
+    },
+    "twitter_mock": {
+      "base_url": "https://cua-gym-twitter.xlang.ai",
+      "public_host": "cua-gym-twitter.xlang.ai",
+      "requires_admin_token": true
+    },
+    "uber_eats_mock": {
+      "base_url": "https://cua-gym-uber-eats.xlang.ai",
+      "public_host": "cua-gym-uber-eats.xlang.ai",
+      "requires_admin_token": true
+    },
+    "vercel_mock": {
+      "base_url": "https://cua-gym-vercel.xlang.ai",
+      "public_host": "cua-gym-vercel.xlang.ai",
+      "requires_admin_token": true
+    },
+    "wandb_mock": {
+      "base_url": "https://cua-gym-wandb.xlang.ai",
+      "public_host": "cua-gym-wandb.xlang.ai",
+      "requires_admin_token": true
+    },
+    "wechat_mock": {
+      "base_url": "https://cua-gym-wechat.xlang.ai",
+      "public_host": "cua-gym-wechat.xlang.ai",
+      "requires_admin_token": true
+    },
+    "weibo_mock": {
+      "base_url": "https://cua-gym-weibo.xlang.ai",
+      "public_host": "cua-gym-weibo.xlang.ai",
+      "requires_admin_token": true
+    },
+    "westlaw_mock": {
+      "base_url": "https://cua-gym-westlaw.xlang.ai",
+      "public_host": "cua-gym-westlaw.xlang.ai",
+      "requires_admin_token": true
+    },
+    "woocommerce_mock": {
+      "base_url": "https://cua-gym-woocommerce.xlang.ai",
+      "public_host": "cua-gym-woocommerce.xlang.ai",
+      "requires_admin_token": true
+    },
+    "workday_mock": {
+      "base_url": "https://cua-gym-workday.xlang.ai",
+      "public_host": "cua-gym-workday.xlang.ai",
+      "requires_admin_token": true
+    },
+    "xiaohongshu_mock": {
+      "base_url": "https://cua-gym-xiaohongshu.xlang.ai",
+      "public_host": "cua-gym-xiaohongshu.xlang.ai",
+      "requires_admin_token": true
+    },
+    "youtube_mock": {
+      "base_url": "https://cua-gym-youtube.xlang.ai",
+      "public_host": "cua-gym-youtube.xlang.ai",
+      "requires_admin_token": true
+    },
+    "zendesk_mock": {
+      "base_url": "https://cua-gym-zendesk.xlang.ai",
+      "public_host": "cua-gym-zendesk.xlang.ai",
+      "requires_admin_token": true
+    },
+    "zhihu_mock": {
+      "base_url": "https://cua-gym-zhihu.xlang.ai",
+      "public_host": "cua-gym-zhihu.xlang.ai",
+      "requires_admin_token": true
+    },
+    "zillow_mock": {
+      "base_url": "https://cua-gym-zillow.xlang.ai",
+      "public_host": "cua-gym-zillow.xlang.ai",
+      "requires_admin_token": true
+    },
+    "zoom_web_mock": {
+      "base_url": "https://cua-gym-zoom-web.xlang.ai",
+      "public_host": "cua-gym-zoom-web.xlang.ai",
+      "requires_admin_token": true
+    }
+  },
+  "mode": "hardened-public-hybrid",
+  "notes": "Harness-side table. Public cua-gym-*.xlang.ai hosts run hybrid mode: legacy requests without admin token remain backward compatible; setup/check requests with CUA_GYM_ADMIN_TOKEN use server-side hardened state and one-time launch URLs."
+}

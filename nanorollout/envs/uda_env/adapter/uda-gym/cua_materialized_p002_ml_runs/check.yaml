@@ -1,0 +1,14 @@
+- path: /tmp_workspace/results/run_evaluation.csv
+  must: "CSV with header exactly 'run_id,run_name,model,state,f1,em,p95_latency_ms,cost_per_1k_usd,eval_set,eval_n,deployable,exclusion_reason' and exactly 10 data rows, one per run run-1 through run-10, matching the seeded qa-eval dashboard (e.g. run-4 is dawn-electra-4 / electra-base / state finished / f1 0.889 / p95 180 / cost 0.74 / eval_set holdout-v2 / eval_n 5200)."
+- path: /tmp_workspace/results/run_evaluation.csv
+  must: "The 'deployable' column is true for exactly run-2, run-3, run-4, run-10 and false for all other six runs; deployable rows have an empty exclusion_reason."
+- path: /tmp_workspace/results/run_evaluation.csv
+  must: "Each non-deployable row carries the precedence-correct reason code: run-7 status_crashed, run-8 status_running, run-5 eval_set_not_full_holdout, run-6 below_f1_threshold, run-1 latency_over_budget (it also exceeds cost, but latency precedes cost), run-9 cost_over_budget."
+- path: /tmp_workspace/results/run_evaluation.csv
+  must: "p95_latency_ms and cost_per_1k_usd cells are blank for the never-finished runs run-7 (crashed) and run-8 (running), and populated for all eight finished runs."
+- path: /tmp_workspace/results/deployment_decision.json
+  must: "JSON object whose recommended_run_id is 'run-4', recommended_run_name is 'dawn-electra-4', recommended_model is 'electra-base', and recommended_f1 equals 0.889 (the max F1 among the deployable runs, NOT the higher-F1 runs run-1 0.912 or run-5 0.921 which are excluded)."
+- path: /tmp_workspace/results/deployment_decision.json
+  must: "deployable_run_ids equals the sorted list ['run-2','run-3','run-4','run-10'] and deployable_count equals 4."
+- path: /tmp_workspace/results/deployment_decision.json
+  must: "The 'excluded' object maps reason codes to sorted run-id lists exactly: status_crashed=['run-7'], status_running=['run-8'], eval_set_not_full_holdout=['run-5'], below_f1_threshold=['run-6'], latency_over_budget=['run-1'], cost_over_budget=['run-9']."

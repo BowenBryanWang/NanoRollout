@@ -1,0 +1,7 @@
+run_id,psi_max,null_rate_pct,split_leakage_pct,qa_status,checked_at_utc
+run-alpha-17,0.071,0.24,0.00,pass,2026-06-29T10:05:00Z
+run-beta-09,0.064,0.21,0.00,pass,2026-06-29T10:05:00Z
+run-gamma-31,0.181,0.29,0.00,fail,2026-06-29T10:05:00Z
+run-delta-42,0.083,0.18,0.00,pass,2026-06-29T10:05:00Z
+run-epsilon-28,0.076,0.22,0.42,fail,2026-06-29T10:05:00Z
+run-zeta-03,0.069,0.23,0.00,pass,2026-06-29T10:05:00Z

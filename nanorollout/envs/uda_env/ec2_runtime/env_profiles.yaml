@@ -1,0 +1,186 @@
+profiles:
+  general-root:
+    description: "Target production base: OSWorld-verified Ubuntu 22.04 GNOME desktop + UDA /v1 API."
+    region: ap-southeast-1
+    source: osworld-verified
+    source_region: us-east-1
+    source_ami_id: ami-0d23263edb96951d8
+    source_ami_name: osworld_client_image_30G_0719
+    source_owner: "366177350716"
+    copied_source_ami_id: ami-02d209e2d203facdb
+    ami_id: ami-0e0244ba3257d200d
+    ami_name: uda-osworld-verified-v1-base-1783061353
+    launch_template_id: lt-03862713037af59fe
+    launch_template_default_version: 9
+    status: validated
+    default_instance_type: t3.xlarge
+    disk_gb: 80
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+    system_services:
+      - gdm.service
+      - osworld.service
+      - websockify.service
+      - uda-compat.service
+    includes:
+      - UDA /v1 compatibility API on port 8080
+      - OSWorld GNOME desktop on DISPLAY=:0
+      - Xorg auth via /run/user/1000/gdm/Xauthority
+      - noVNC/x11vnc through OSWorld services
+      - xdotool/scrot/gnome-screenshot/pyautogui computer-use controls
+      - Google Chrome
+      - Visual Studio Code
+      - LibreOffice suite
+      - Evince PDF reader plus poppler/qpdf/ghostscript PDF tools
+      - GIMP
+      - shell, file, Python, Node.js, media inspection tools
+
+  general:
+    description: "Alias for general-root profile."
+    alias_for: general-root
+    status: validated
+
+  general-clean-ubuntu-legacy:
+    description: "Legacy clean-Ubuntu base: Xvfb/Openbox desktop + UDA /v1 API."
+    region: ap-southeast-1
+    source: canonical-ubuntu
+    source_release: jammy-22.04
+    ami_id: ami-0bad637250a404597
+    ami_name: uda-ubuntu-root-general-1782996914
+    launch_template_id: lt-03862713037af59fe
+    launch_template_default_version: 8
+    status: legacy
+    default_instance_type: t3.large
+    disk_gb: 80
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+    system_services:
+      - uda-xvfb.service
+      - uda-desktop.service
+      - uda-compat.service
+      - uda-x11vnc.service
+
+  general-osworld-legacy:
+    description: "Validated bootstrap path: OSWorld base + /v1 UDA compatibility layer."
+    region: ap-southeast-1
+    launch_template_id: lt-03862713037af59fe
+    launch_template_default_version: 6
+    ami_id: ami-0c809c77a6e0345e8
+    default_instance_type: t3.large
+    disk_gb: 80
+    workspace_dir: /home/user
+    includes:
+      - OSWorld desktop software baseline
+      - UDA /v1 compatibility API on port 8080
+      - LibreOffice and PDF tools
+      - browser, shell, file, Python, computer-use controls
+
+  multimedia:
+    description: "OSWorld-derived multimedia profile: GNOME desktop + 3D/video/audio editing stack."
+    parent: general-root
+    region: ap-southeast-1
+    source_ami_id: ami-0e0244ba3257d200d
+    ami_id: ami-0982def14f5ab6546
+    ami_name: uda-multimedia-profile-20260703-codex
+    status: validated
+    default_instance_type: t3.xlarge
+    disk_gb: 120
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+    includes:
+      - Blender
+      - Kdenlive
+      - OpenShot
+      - Shotcut
+      - Audacity
+      - HandBrake CLI/GUI
+      - VLC
+      - OBS Studio
+      - frei0r/mlt plugins
+      - ffmpeg, mediainfo, exiftool from general-root
+
+  multimedia-clean-ubuntu-legacy:
+    description: "Legacy multimedia profile: clean-Ubuntu legacy base + 3D/video/audio editing stack."
+    parent: general-clean-ubuntu-legacy
+    region: ap-southeast-1
+    source_ami_id: ami-0bad637250a404597
+    ami_id: ami-0dfca7b8e823bb427
+    ami_name: uda-multimedia-profile-final-v2-1783002700
+    status: legacy-validated
+    default_instance_type: t3.xlarge
+    disk_gb: 120
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+
+  media:
+    description: "Alias for multimedia profile."
+    alias_for: multimedia
+    status: validated
+
+  datascience:
+    description: "OSWorld-derived data science / BI profile: analytics, notebooks, and BI servers."
+    parent: general-root
+    region: ap-southeast-1
+    source_ami_id: ami-0e0244ba3257d200d
+    ami_id: ami-0a853376fa22ebf11
+    ami_name: uda-datascience-bi-profile-metabase-v04915-20260703c
+    status: validated
+    default_instance_type: t3.xlarge
+    disk_gb: 120
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+    services:
+      - grafana-server.service
+      - metabase.service
+      - uda-jupyter.service
+      - postgresql.service
+    ports:
+      grafana: 3000
+      metabase: 3001
+      jupyter: 8888
+      superset_default: 8088
+      streamlit_default: 8501
+    includes:
+      - Grafana
+      - Metabase
+      - JupyterLab
+      - Apache Superset CLI
+      - Streamlit
+      - Dash
+      - DuckDB
+      - PostgreSQL
+      - SQLite and SQLite Browser
+      - R
+      - pandas, numpy, scipy, scikit-learn, statsmodels
+      - plotly, bokeh, altair, seaborn, matplotlib
+      - dbt-core and dbt-duckdb
+      - Great Expectations
+      - Metabase v0.49.15 pinned for OpenJDK 17 compatibility
+
+  datascience-clean-ubuntu-legacy:
+    description: "Legacy data science / BI profile: clean-Ubuntu legacy base + analytics, notebooks, and BI servers."
+    parent: general-clean-ubuntu-legacy
+    region: ap-southeast-1
+    source_ami_id: ami-0bad637250a404597
+    ami_id: ami-0f81bdda55923bd7a
+    ami_name: uda-datascience-profile-final-clean-1783005600
+    status: legacy-validated
+    default_instance_type: t3.xlarge
+    disk_gb: 120
+    workspace_dir: /home/user
+    task_workspace_dir: /tmp_workspace
+
+  bi:
+    description: "Alias for datascience profile."
+    alias_for: datascience
+    status: validated
+
+  cad:
+    description: "Optional future profile: general + KiCAD/FreeCAD CAD stack."
+    parent: general-root
+    status: planned
+
+  design:
+    description: "Optional future profile: general + Inkscape and heavier design add-ons."
+    parent: general-root
+    status: planned

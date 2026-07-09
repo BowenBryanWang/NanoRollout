@@ -34,6 +34,7 @@ from typing import Dict
 from .base import BenchDriver, discover_workspace_assets
 from .cocoa_v1 import CocoaV1Driver
 from .osworld_v1 import OSWorldV1Driver
+from .uda_gym import UdaGymDriver
 from .wildclaw_v1 import WildclawV1Driver
 
 __all__ = [
@@ -56,6 +57,7 @@ def register_driver(driver: BenchDriver) -> None:
 
 # Built-in drivers
 register_driver(CocoaV1Driver())
+register_driver(UdaGymDriver())
 register_driver(WildclawV1Driver())
 register_driver(OSWorldV1Driver())
 
@@ -103,6 +105,8 @@ def load_driver_for_task_dir(task_dir: Path) -> BenchDriver:
     assets = discover_workspace_assets(task_dir)
     if "test_py_enc" in assets:
         return REGISTRY["cocoa-v1"]
+    if "check_sh" in assets:
+        return REGISTRY["uda-gym"]
     if "grade_py" in assets:
         return REGISTRY["wildclaw-v1"]
 

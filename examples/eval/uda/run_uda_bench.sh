@@ -5,12 +5,12 @@
 #   nanorollout/envs/uda_env/adapter/<bench>/<instance_id>/
 # No external benchmark repo checkout is required at run time.
 #
-# Switch between benchmarks with BENCH (e.g. BENCH=cocoa-v1, BENCH=osworld-v2
-# once that adapter lands).
+# Switch between benchmarks with BENCH (e.g. BENCH=cocoa-v1,
+# BENCH=wildclaw-v1, BENCH=uda-gym).
 set -euo pipefail
 
-BENCH="${BENCH:-cocoa-v1}"
-INSTANCE_ID="${INSTANCE_ID:-eight-puzzle-game}"
+BENCH="${BENCH:-uda-gym}"
+INSTANCE_ID="${INSTANCE_ID:-codex100_002}"
 REQUEST_FILE="${REQUEST_FILE:-}"
 
 MODEL_NAME="${MODEL_NAME:-claude-sonnet-4-6}"
@@ -20,9 +20,25 @@ OPENAI_API_KEY="${OPENAI_API_KEY:-${API_KEY:-${ANTHROPIC_API_KEY:-}}}"
 OUTPUT_DIR="${OUTPUT_DIR:-./results/uda-${BENCH}}"
 CONCURRENCY="${CONCURRENCY:-1}"
 ENV_TYPE="${ENV_TYPE:-modal}"
+EC2_REGION="${EC2_REGION:-}"
+EC2_AMI_ID="${EC2_AMI_ID:-}"
+EC2_LAUNCH_TEMPLATE_ID="${EC2_LAUNCH_TEMPLATE_ID:-}"
+EC2_LAUNCH_TEMPLATE_NAME="${EC2_LAUNCH_TEMPLATE_NAME:-}"
+EC2_LAUNCH_TEMPLATE_VERSION="${EC2_LAUNCH_TEMPLATE_VERSION:-}"
+EC2_INSTANCE_TYPE="${EC2_INSTANCE_TYPE:-}"
+EC2_SUBNET_ID="${EC2_SUBNET_ID:-}"
+EC2_SECURITY_GROUP_IDS="${EC2_SECURITY_GROUP_IDS:-}"
+EC2_IAM_INSTANCE_PROFILE="${EC2_IAM_INSTANCE_PROFILE:-}"
+EC2_USE_PRIVATE_IP="${EC2_USE_PRIVATE_IP:-}"
+EC2_TERMINATE_ON_CLEANUP="${EC2_TERMINATE_ON_CLEANUP:-}"
+EC2_ENV_PROFILE="${EC2_ENV_PROFILE:-}"
 
 UDA_TASKS_DIR="${UDA_TASKS_DIR:-}"
-USE_ENCRYPTED_TASKS="${USE_ENCRYPTED_TASKS:-true}"
+if [[ "${BENCH}" == "cocoa-v1" ]]; then
+  USE_ENCRYPTED_TASKS="${USE_ENCRYPTED_TASKS:-true}"
+else
+  USE_ENCRYPTED_TASKS="${USE_ENCRYPTED_TASKS:-false}"
+fi
 CLIENT_TYPE="${CLIENT_TYPE:-unified}"
 
 STEP_TIMEOUT="${STEP_TIMEOUT:-600}"
@@ -59,6 +75,43 @@ fi
 
 if [[ -n "${UDA_TASKS_DIR}" ]]; then
   cmd+=(--uda-tasks-dir "${UDA_TASKS_DIR}")
+fi
+
+if [[ -n "${EC2_REGION}" ]]; then
+  cmd+=(--ec2-region "${EC2_REGION}")
+fi
+if [[ -n "${EC2_AMI_ID}" ]]; then
+  cmd+=(--ec2-ami-id "${EC2_AMI_ID}")
+fi
+if [[ -n "${EC2_LAUNCH_TEMPLATE_ID}" ]]; then
+  cmd+=(--ec2-launch-template-id "${EC2_LAUNCH_TEMPLATE_ID}")
+fi
+if [[ -n "${EC2_LAUNCH_TEMPLATE_NAME}" ]]; then
+  cmd+=(--ec2-launch-template-name "${EC2_LAUNCH_TEMPLATE_NAME}")
+fi
+if [[ -n "${EC2_LAUNCH_TEMPLATE_VERSION}" ]]; then
+  cmd+=(--ec2-launch-template-version "${EC2_LAUNCH_TEMPLATE_VERSION}")
+fi
+if [[ -n "${EC2_INSTANCE_TYPE}" ]]; then
+  cmd+=(--ec2-instance-type "${EC2_INSTANCE_TYPE}")
+fi
+if [[ -n "${EC2_SUBNET_ID}" ]]; then
+  cmd+=(--ec2-subnet-id "${EC2_SUBNET_ID}")
+fi
+if [[ -n "${EC2_SECURITY_GROUP_IDS}" ]]; then
+  cmd+=(--ec2-security-group-ids "${EC2_SECURITY_GROUP_IDS}")
+fi
+if [[ -n "${EC2_IAM_INSTANCE_PROFILE}" ]]; then
+  cmd+=(--ec2-iam-instance-profile "${EC2_IAM_INSTANCE_PROFILE}")
+fi
+if [[ -n "${EC2_USE_PRIVATE_IP}" ]]; then
+  cmd+=(--ec2-use-private-ip "${EC2_USE_PRIVATE_IP}")
+fi
+if [[ -n "${EC2_TERMINATE_ON_CLEANUP}" ]]; then
+  cmd+=(--ec2-terminate-on-cleanup "${EC2_TERMINATE_ON_CLEANUP}")
+fi
+if [[ -n "${EC2_ENV_PROFILE}" ]]; then
+  cmd+=(--ec2-env-profile "${EC2_ENV_PROFILE}")
 fi
 
 "${cmd[@]}"

@@ -103,6 +103,7 @@ class WildclawV1Driver:
         task: Dict[str, Any]
     ) -> None:
         ws = self.container_workspace
+        self._ensure_workspace(runtime)
 
         # Stage env vars for the AGENT's rollout shell sessions: write a
         # profile.d snippet (so login shells get them) and a /tmp_workspace/.env
@@ -154,6 +155,22 @@ class WildclawV1Driver:
                 entry.name,
                 dest,
             )
+
+    def _ensure_workspace(self, runtime: "BaseSandboxRuntime") -> None:
+        ws = self.container_workspace.rstrip("/")
+        result = runtime.exec_in_runtime(
+            (
+                f"mkdir -p {shlex.quote(ws)} {shlex.quote(f'{ws}/results')} "
+                f"&& chmod u+rwX {shlex.quote(ws)} {shlex.quote(f'{ws}/results')} "
+                f"&& test -w {shlex.quote(ws)} && test -w {shlex.quote(f'{ws}/results')} "
+                "&& echo __UDA_WORKSPACE_OK__"
+            ),
+            workdir="/",
+            timeout=30,
+        )
+        if "__UDA_WORKSPACE_OK__" not in (result.get("output") or ""):
+            err = result.get("error") or result.get("output") or "<no output>"
+            raise RuntimeError(f"wildclaw-v1: workspace is not writable: {err}")
 
     def run_warmup(
         self,

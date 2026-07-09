@@ -31,6 +31,15 @@ nanorollout/envs/uda_env/adapter/
 │       ├── exec/                       # (optional) inputs copied to /tmp_workspace/
 │       ├── gt/                         # (optional) injected post-rollout
 │       └── skills/                     # (optional)
+├── uda-gym/                            # native generated UDA tasks
+│   └── <task-id>/
+│       ├── meta.json                   # driver=uda-gym
+│       ├── task.yaml / instruction.md
+│       ├── exec/                       # pre-rollout visible inputs
+│       ├── hidden/                     # setup-only assets, removed before agent
+│       ├── setup.sh                    # hidden pre-agent setup
+│       ├── gt/                         # injected post-rollout
+│       └── check.sh                    # hidden evaluator
 ├── osworld-v2/                         # (TODO) the ~66% CLI-bypassable subset
 └── swe-bench-mm/                       # (TODO) 612 frontend bug fixes
 ```
@@ -44,7 +53,7 @@ divergence is handled by per-bench drivers
 
 | File / dir | cocoa-v1 | wildclaw-v1 | Purpose |
 |---|---|---|---|
-| `meta.json` | optional | required | `{id, name, category, timeout_seconds, driver}` — `driver` field routes to the correct `BenchDriver`. |
+| `meta.json` | optional | required | `{id, name, category, timeout_seconds, driver}` — `driver` field routes to the correct `BenchDriver`. Native generated tasks use `driver: uda-gym`. |
 | `Dockerfile` | required | required | Thin overlay on `uda-desktop`. |
 | `docker-compose.yaml` | required | required | Builds + runs the Dockerfile, maps `${HOST_PORT}:8080`. |
 | `task.yaml(.enc)` | encrypted | plaintext | Agent instruction (top-level key: `instruction`). |

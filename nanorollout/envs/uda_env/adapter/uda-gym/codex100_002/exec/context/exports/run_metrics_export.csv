@@ -1,0 +1,7 @@
+run_id,display_name,exported_status,val_f1,val_loss,latency_ms,exported_at_utc
+run-alpha-17,alpha baseline,finished,0.842,0.331,46,2026-06-29T09:40:00Z
+run-beta-09,beta wide,finished,0.861,0.319,58,2026-06-29T09:40:00Z
+run-gamma-31,gamma resample,finished,0.866,0.316,54,2026-06-29T09:40:00Z
+run-delta-42,delta calibrated,finished,0.854,0.323,51,2026-06-29T09:40:00Z
+run-epsilon-28,epsilon compact,finished,0.849,0.329,43,2026-06-29T09:40:00Z
+run-zeta-03,zeta late,finished,0.858,0.321,55,2026-06-29T09:40:00Z

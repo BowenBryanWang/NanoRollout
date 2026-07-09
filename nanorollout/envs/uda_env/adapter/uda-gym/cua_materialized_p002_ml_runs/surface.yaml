@@ -1,0 +1,40 @@
+surfaces:
+  spec:
+    declared: prompt
+    realized_as: fs
+    mock: null
+    entrypoints:
+      - query.md
+    stateful: false
+    verifier_readback: >
+      The deployment policy (the five deployability constraints, the highest-F1 tie-break,
+      and the exclusion-reason precedence) is stated verbatim in the prompt. No external
+      surface is needed to read the spec.
+  input:
+    declared: dashboard
+    realized_as: cua_mock_website
+    mock: wandb_mock
+    entrypoints:
+      - https://cua-gym-wandb.xlang.ai
+    stateful: true
+    verifier_readback: >
+      The ten qa-eval runs and every deciding metric (state, f1, em, p95_latency_ms,
+      cost_per_1k_usd, eval_set, eval_n) live only as injected runtime state of the deployed
+      wandb_mock. The verifier should read the same seeded CUA-Gym W&B session with
+      GET https://cua-gym-wandb.xlang.ai/go?sid=<harness-provided-session-id> and confirm
+      that this read-only inspection task leaves no meaningful state diff. None of these
+      metrics exist in any agent-visible local file, so the dashboard inspection is
+      load-bearing.
+  deliverable:
+    declared: fs
+    realized_as: fs
+    mock: null
+    entrypoints:
+      - /tmp_workspace/results/run_evaluation.csv
+      - /tmp_workspace/results/deployment_decision.json
+    stateful: false
+    verifier_readback: >
+      Two structured local files read back deterministically: a 10-row CSV with fixed columns
+      carrying per-run deployable flag + precedence-correct exclusion_reason, and a decision
+      JSON whose recommended_run_id=run-4, deployable_run_ids=[run-2,run-3,run-4,run-10], and
+      excluded map pin every trap. No prose deliverable.

@@ -456,7 +456,77 @@ envs/uda_env/
 └── runtime_adapter/        per-runtime action translation (e.g. OSWorld pyautogui)
 ```
 
-## 11. Cross-scaffold design lineage
+## 11. Installed CLI agents (Claude Code / Qwen Code / OpenCode)
+
+Alongside the per-step controller loop above, the scaffold supports a
+second path: **run a self-driving CLI agent (Claude Code, Qwen Code,
+OpenCode) inside the uda-desktop container**. The CLI agent owns its
+own loop (Bash / Edit / Read / Glob / Grep tools), so the Python
+controller is bypassed — uda-env only provides the sandbox and the
+driver setup / scoring.
+
+```
+TaskExecutor + Controller     →  per-step loop, used by Qwen / Claude / etc.
+                                  through controller.start_task / step
+
+run_uda_claude_code            →  CLI agent path
+   sandbox_client.create_environment()      ← uda-desktop comes up
+   driver.setup_workspace + run_warmup      ← stages task workspace
+   UdaShellAdapter(runtime)                 ← shim → ShellEnvironment
+   ClaudeCode(...).run(instruction, shim)   ← npm install + claude --print
+   driver.score(runtime, task, result)      ← grader inside container
+```
+
+Wiring lives in:
+
+- `nanorollout/envs/uda_env/shell_adapter.py` — `UdaShellAdapter`
+  wraps a started `BaseSandboxRuntime` as `ShellEnvironment`. Round-
+  trips commands through `runtime.exec_in_runtime`, recovers a real
+  exit code by appending `; printf '<sentinel>%d\n' "$?"` to a
+  subshell. Lifecycle methods are no-ops — uda-env owns container
+  start/stop.
+- `nanorollout/harness/runner/uda/installed.py` — entry points
+  `run_uda_claude_code`, `run_uda_qwen_code`, `run_uda_opencode`.
+  Re-uses `_resolve_task_root` / `_load_task` / `_build_uda_config`
+  helpers from `uda_agent.py` so corpus loading is identical, then
+  swaps the agent loop.
+
+Scope and caveats:
+
+- **CLI-only baseline.** Claude Code's native tool set has no
+  screenshot / click / type. Tasks that require GUI interaction
+  (e.g. cocoa-v1 Pattern A tasks) cannot be solved on this path.
+  Wildclaw-v1's file-state graders are the natural first target — most
+  of its tasks score off `~/.claude/skills/`, OS file ops, code in
+  the workspace, all reachable from Bash/Edit/Read.
+- **Future: computer-use MCP bridge.** Closing the GUI gap is a
+  follow-up — register an MCP server inside the container that
+  exposes uda-desktop's `/v1/computer-use/*` as MCP tools. Claude
+  Code then sees `screenshot` / `click` / `type` as ordinary tools.
+- **Why this matters for UDA training.** This is the apples-to-apples
+  comparison point from Bryan Wang's "Towards UDA" blog: CLI agents
+  hit 49–54% on OSWorld-Verified with no GUI policy. Having both
+  paths in the scaffold lets us measure the same Δ on our own
+  benches and use the CLI baseline as a discriminator signal during
+  task generation.
+
+Usage:
+
+```python
+from nanorollout.harness.runner.uda import run_uda_claude_code
+
+run_uda_claude_code(
+    instance_id="06_Safety_Alignment_task_1_file_overwrite",
+    output_dir="./out/claude-code/file_overwrite",
+    model_name="claude-sonnet-4-5",          # mapped to ANTHROPIC_MODEL inside container
+    api_key=os.environ["ANTHROPIC_API_KEY"], # forwarded as ANTHROPIC_API_KEY env
+    env_type="docker",                        # or "modal"
+    bench="wildclaw-v1",
+    extra_args={"agent_timeout": 600, "step_timeout": 120},
+)
+```
+
+## 12. Cross-scaffold design lineage
 
 Where each part came from, and why we made the choices we did:
 

@@ -93,3 +93,23 @@ nro = "nanorollout.cli:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["nanorollout*"]
+
+[tool.setuptools.package-data]
+"nanorollout.envs.uda_env.adapter" = [
+  "uda-gym/*.md",
+  "uda-gym/*.json",
+  "uda-gym/*/Dockerfile",
+  "uda-gym/*/*.json",
+  "uda-gym/*/*.md",
+  "uda-gym/*/*.sh",
+  "uda-gym/*/*.tsv",
+  "uda-gym/*/*.yaml",
+  "uda-gym/*/exec/*",
+  "uda-gym/*/exec/**/*",
+  "uda-gym/*/gt/*",
+  "uda-gym/*/gt/**/*",
+  "uda-gym/*/hidden/*",
+  "uda-gym/*/hidden/**/*",
+]
+"nanorollout.envs.uda_env.ec2_runtime" = ["*.md", "*.yaml", "*.sh"]
+"nanorollout.envs.uda_env.ec2_runtime.aws" = ["*.md"]

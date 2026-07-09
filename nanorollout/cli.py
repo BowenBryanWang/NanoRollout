@@ -120,6 +120,7 @@ def _add_install_agents_args(run_parser: argparse.ArgumentParser) -> None:
 
 def _add_runner_timeout_args(run_parser: argparse.ArgumentParser) -> None:
     run_parser.add_argument("--step-timeout", type=int, default=600)
+    run_parser.add_argument("--agent-timeout", type=int, default=None)
     run_parser.add_argument("--eval-timeout", type=int, default=1800)
     run_parser.add_argument("--env-timeout", type=int, default=120)
     run_parser.add_argument("--create-timeout", type=int, default=600)
@@ -234,6 +235,40 @@ def _add_uda_run_args(run_parser: argparse.ArgumentParser) -> None:
             "to nanorollout/envs/uda_env/adapter/<bench>/ inside the package."
         ),
     )
+    run_parser.add_argument("--ec2-region", default=None)
+    run_parser.add_argument("--ec2-ami-id", default=None)
+    run_parser.add_argument("--ec2-launch-template-id", default=None)
+    run_parser.add_argument("--ec2-launch-template-name", default=None)
+    run_parser.add_argument("--ec2-launch-template-version", default=None)
+    run_parser.add_argument("--ec2-instance-type", default=None)
+    run_parser.add_argument("--ec2-subnet-id", default=None)
+    run_parser.add_argument(
+        "--ec2-security-group-ids",
+        default=None,
+        help="Comma-separated security group ids for EC2 runtime instances.",
+    )
+    run_parser.add_argument("--ec2-iam-instance-profile", default=None)
+    run_parser.add_argument("--ec2-key-name", default=None)
+    run_parser.add_argument("--ec2-workspace-dir", default=None)
+    run_parser.add_argument(
+        "--ec2-use-private-ip",
+        nargs="?",
+        const=True,
+        default=None,
+        type=_parse_bool,
+        help="Use the instance private IP for the sandbox base URL.",
+    )
+    run_parser.add_argument(
+        "--ec2-terminate-on-cleanup",
+        nargs="?",
+        const=True,
+        default=None,
+        type=_parse_bool,
+        help="Terminate EC2 runtime instances during cleanup.",
+    )
+    run_parser.add_argument("--ec2-env-profile", default=None)
+    run_parser.add_argument("--ec2-owner", default=None)
+    run_parser.add_argument("--ec2-ttl", default=None)
 
 
 def _add_osworld_run_args(run_parser: argparse.ArgumentParser) -> None:
@@ -357,6 +392,7 @@ def _split_instance_ids(values: list[str]) -> list[str]:
 
 RUNNER_TIMEOUT_EXTRA_ARG_FIELDS = {
     "step_timeout",
+    "agent_timeout",
     "eval_timeout",
     "env_timeout",
     "create_timeout",
@@ -413,6 +449,24 @@ UDA_EXTRA_ARG_FIELDS = {
     "use_encrypted_tasks",
     "uda_tasks_dir",
     "bench",
+    "aws_profile",
+    "aws_region",
+    "ec2_region",
+    "ec2_ami_id",
+    "ec2_launch_template_id",
+    "ec2_launch_template_name",
+    "ec2_launch_template_version",
+    "ec2_instance_type",
+    "ec2_subnet_id",
+    "ec2_security_group_ids",
+    "ec2_iam_instance_profile",
+    "ec2_key_name",
+    "ec2_workspace_dir",
+    "ec2_use_private_ip",
+    "ec2_terminate_on_cleanup",
+    "ec2_env_profile",
+    "ec2_owner",
+    "ec2_ttl",
 }
 
 
@@ -461,6 +515,7 @@ def _build_extra_args(
 
     runner_defaults = {
         "step_timeout": getattr(args, "step_timeout", 600),
+        "agent_timeout": getattr(args, "agent_timeout", None),
         "eval_timeout": getattr(args, "eval_timeout", 1800),
         "env_timeout": getattr(args, "env_timeout", 120),
         "create_timeout": getattr(args, "create_timeout", 600),
@@ -520,6 +575,22 @@ def _build_extra_args(
             "use_encrypted_tasks": getattr(args, "use_encrypted_tasks", None),
             "uda_tasks_dir": getattr(args, "uda_tasks_dir", None),
             "bench": getattr(args, "bench", None),
+            "ec2_region": getattr(args, "ec2_region", None),
+            "ec2_ami_id": getattr(args, "ec2_ami_id", None),
+            "ec2_launch_template_id": getattr(args, "ec2_launch_template_id", None),
+            "ec2_launch_template_name": getattr(args, "ec2_launch_template_name", None),
+            "ec2_launch_template_version": getattr(args, "ec2_launch_template_version", None),
+            "ec2_instance_type": getattr(args, "ec2_instance_type", None),
+            "ec2_subnet_id": getattr(args, "ec2_subnet_id", None),
+            "ec2_security_group_ids": getattr(args, "ec2_security_group_ids", None),
+            "ec2_iam_instance_profile": getattr(args, "ec2_iam_instance_profile", None),
+            "ec2_key_name": getattr(args, "ec2_key_name", None),
+            "ec2_workspace_dir": getattr(args, "ec2_workspace_dir", None),
+            "ec2_use_private_ip": getattr(args, "ec2_use_private_ip", None),
+            "ec2_terminate_on_cleanup": getattr(args, "ec2_terminate_on_cleanup", None),
+            "ec2_env_profile": getattr(args, "ec2_env_profile", None),
+            "ec2_owner": getattr(args, "ec2_owner", None),
+            "ec2_ttl": getattr(args, "ec2_ttl", None),
         }
     elif task == "osworld":
         defaults = {

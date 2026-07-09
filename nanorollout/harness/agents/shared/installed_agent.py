@@ -315,7 +315,7 @@ class InstalledAgentBase(ABC):
         if self._extra_env:
             merged_env.update(self._extra_env)
 
-        parts = ["set -o pipefail"]
+        parts = ["(set -o pipefail) 2>/dev/null && set -o pipefail || true"]
         for key, value in merged_env.items():
             if value is None:
                 continue
@@ -384,6 +384,21 @@ class InstalledAgentBase(ABC):
         if self._remote_logs_dir is None:
             return
         self.logs_dir.mkdir(parents=True, exist_ok=True)
+
+        # If the environment exposes a chunked-fetch hook (e.g.
+        # UdaShellAdapter.pull_dir_via_sdk uses the file API), prefer it —
+        # the default tar+base64 path piggybacks on shell exec which the
+        # uda-env SDK caps at ~30 KB, truncating Claude Code session logs.
+        pull = getattr(environment, "pull_dir_via_sdk", None)
+        if callable(pull):
+            try:
+                if pull(self.remote_logs_dir.as_posix(), self.logs_dir):
+                    return
+            except Exception:
+                self.logger.exception(
+                    "pull_dir_via_sdk failed; falling back to tar+base64"
+                )
+
         remote_dir = shlex.quote(self.remote_logs_dir.as_posix())
         result = self.exec(
             environment,
@@ -395,7 +410,12 @@ class InstalledAgentBase(ABC):
             timeout_sec=DEFAULT_SYNC_TIMEOUT_SEC,
             check=False,
         )
-        payload = result.output.strip()
+        # Strip ALL whitespace, not just leading/trailing. Some shell
+        # transports inject stray newlines mid-stream from line-buffered
+        # output. base64's alphabet contains no whitespace, so this is
+        # safe. (Non-base64-alphabet markers like UdaShellAdapter's
+        # heartbeat lines are already filtered out by the environment.)
+        payload = "".join(result.output.split())
         if result.exit_code != 0 or not payload:
             return
         data = base64.b64decode(payload)
