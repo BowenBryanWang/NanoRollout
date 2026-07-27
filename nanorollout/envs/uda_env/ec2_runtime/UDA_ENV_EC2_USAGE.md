@@ -3,6 +3,8 @@
 This is the clean handoff for the UDA EC2 runtime in AWS Singapore. It
 covers the delivered base AMI, validated profile AMIs, how to run them
 from NanoRollout, and the validation gates required before future changes.
+For the UDA-specific NanoRollout code paths and rebase hotspots, also read
+[`UDA_GYM_CODE_HANDOFF.md`](UDA_GYM_CODE_HANDOFF.md).
 
 ## Delivered Resources
 

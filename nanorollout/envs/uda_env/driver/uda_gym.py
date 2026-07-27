@@ -6,10 +6,14 @@ Native UDA-Gym task contract:
 - ``exec/`` is copied into ``/tmp_workspace/`` before the rollout.
 - ``setup.sh`` runs inside the environment after ``exec/`` staging and before
   the agent starts. It is hidden harness code, suitable for CUA-Gym Hub state
-  injection and opening Chrome to the seeded ``?sid=...`` URL.
+  injection and opening Chrome to the hardened one-time launch URL.
 - ``harness_env.tsv`` names host environment variables passed only to
   ``setup.sh`` and ``check.sh``. They are never staged into the agent-visible
   workspace.
+- The driver also injects a randomized per-rollout
+  ``UDA_GYM_HARNESS_STATE_DIR`` into ``setup.sh`` and ``check.sh`` only. Mock
+  website setup should write session metadata there; the agent never receives
+  this path.
 - ``gt/`` is copied into ``/tmp_workspace/gt/`` only after the agent finishes.
 - ``check.sh`` runs inside the environment for evaluation and must print one
   JSON object containing per-criterion scores, including ``overall_score`` when
@@ -22,6 +26,7 @@ import json
 import os
 import shlex
 import tempfile
+import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -55,6 +60,14 @@ class UdaGymDriver:
 
         instruction = task_data.get("instruction")
         instruction_path = task_dir / "instruction.md"
+        if instruction and instruction_path.is_file():
+            lowered = str(instruction).strip().lower()
+            if (
+                lowered.startswith("see instruction.md")
+                or lowered.startswith("see query.md")
+                or "agent-visible task" in lowered
+            ):
+                instruction = instruction_path.read_text(encoding="utf-8").strip()
         if not instruction and instruction_path.is_file():
             instruction = instruction_path.read_text(encoding="utf-8").strip()
         if not instruction:
@@ -129,6 +142,7 @@ class UdaGymDriver:
     def setup_workspace(self, runtime: "BaseSandboxRuntime", task: Dict[str, Any]) -> None:
         ws = self.container_workspace
         self._ensure_workspace(runtime)
+        self._ensure_harness_state(runtime, task)
         self._stage_env(runtime, task)
 
         exec_dir = task.get("exec_dir")
@@ -148,6 +162,7 @@ class UdaGymDriver:
         setup_path = task.get("setup_path")
         if not setup_path:
             return
+        self._ensure_harness_state(runtime, task)
         extra_cleanup: list[str] = []
         hidden_dir = task.get("hidden_dir")
         if hidden_dir:
@@ -184,7 +199,7 @@ class UdaGymDriver:
             workdir=ws,
             timeout=30,
         )
-        if result.get("returncode", 0) != 0:
+        if result.get("returncode", result.get("exit_code", 0)) != 0:
             raise RuntimeError(
                 "uda-gym: failed to create gt dir: "
                 + str(result.get("error") or result.get("output") or "<no output>")
@@ -209,6 +224,7 @@ class UdaGymDriver:
             logger.info("uda-gym: %s has no check.sh; skipping eval", task.get("task_name"))
             return None
 
+        self._ensure_harness_state(runtime, task)
         self.inject_ground_truth(runtime, task)
         result = self._run_hidden_script(
             runtime=runtime,
@@ -223,12 +239,12 @@ class UdaGymDriver:
         output = result.get("output", "")
         parsed = self._parse_json_from_output(output)
         if parsed is not None:
-            if result.get("returncode", 0) != 0:
+            if result.get("returncode", result.get("exit_code", 0)) != 0:
                 parsed.setdefault("error", "check.sh exited non-zero")
             return parsed
 
         err = result.get("error") or output or "<no output>"
-        if result.get("returncode", 0) != 0:
+        if result.get("returncode", result.get("exit_code", 0)) != 0:
             return {"error": f"check.sh failed: {err}"}
         return {"error": f"unparseable check.sh output: {output!r}"}
 
@@ -265,6 +281,38 @@ class UdaGymDriver:
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
+    def _ensure_harness_state(
+        self,
+        runtime: "BaseSandboxRuntime",
+        task: Dict[str, Any],
+    ) -> str:
+        """Create a per-rollout hidden metadata directory for setup/check only.
+
+        The path is intentionally randomized per task execution and is only
+        injected into hidden setup/check script environments. It is not written
+        to /tmp_workspace, profile.d, task instructions, or the agent process
+        environment.
+        """
+        existing = task.get("_uda_gym_harness_state_dir")
+        if isinstance(existing, str) and existing:
+            return existing
+
+        task_id = str(task.get("task_id") or task.get("task_name") or "task")
+        safe_task_id = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in task_id)
+        run_id = uuid.uuid4().hex
+        state_dir = f"/tmp/.uda_gym_harness/{safe_task_id}/{run_id}"
+        task["_uda_gym_harness_state_dir"] = state_dir
+
+        result = runtime.exec_in_runtime(
+            f"mkdir -p {shlex.quote(state_dir)} && chmod 700 {shlex.quote(state_dir)}",
+            workdir="/",
+            timeout=30,
+        )
+        if result.get("returncode", result.get("exit_code", 0)) != 0:
+            err = result.get("error") or result.get("output") or "<no output>"
+            raise RuntimeError(f"uda-gym: failed to create harness state dir: {err}")
+        return state_dir
+
     def _run_hidden_script(
         self,
         runtime: "BaseSandboxRuntime",
@@ -291,13 +339,21 @@ class UdaGymDriver:
             command,
             workdir=ws,
             timeout=timeout,
-            env=self.get_harness_env(task),
+            env=self._hidden_script_env(task),
         )
         returncode = result.get("returncode", result.get("exit_code", 0))
         if fail_on_error and returncode != 0:
             err = result.get("error") or result.get("output") or "<no output>"
             raise RuntimeError(f"uda-gym: {phase}.sh failed: {err}")
         return result
+
+    def _hidden_script_env(self, task: Dict[str, Any]) -> Dict[str, str]:
+        env = self.get_harness_env(task)
+        state_dir = task.get("_uda_gym_harness_state_dir")
+        if isinstance(state_dir, str) and state_dir:
+            env["UDA_GYM_HARNESS_STATE_DIR"] = state_dir
+            env["UDA_GYM_TASK_ID"] = str(task.get("task_id") or task.get("task_name") or "")
+        return env
 
     @staticmethod
     def _parse_json_from_output(output: str) -> Optional[Dict[str, Any]]:

@@ -48,7 +48,7 @@ dependencies = [
   "backoff",
   "beautifulsoup4",
   "boto3",
-  "borb",
+  "borb==2.1.25",
   "cssselect",
   "easyocr",
   "fastdtw",
@@ -77,6 +77,11 @@ dependencies = [
   "scikit-image",
   "tldextract",
   "xmltodict",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
 ]
 
 

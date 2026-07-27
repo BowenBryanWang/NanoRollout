@@ -132,6 +132,19 @@ Then every task under `adapter/osworld-v2/<task_id>/meta.json` carries
   the agent's rollout terminates, mirroring WildClawBench's "no data
   leakage during execution" guarantee. Cocoa achieves the same via
   encryption-with-canary on the verifier closure.
+- **Mock session metadata is harness-owned.** The `uda-gym` driver creates a
+  randomized per-rollout `UDA_GYM_HARNESS_STATE_DIR` and injects it only into
+  hidden setup/check script environments. Mock website setup writes randomized
+  sid metadata there, and check reads it back. The path and sid are never
+  staged into `exec/`, `/tmp_workspace/context`, profile.d, task instructions,
+  or the agent environment.
+- **Local custom UI metadata follows the same boundary.** Bespoke browser apps
+  should be started by hidden `setup.sh` from hidden assets, store pid/port/token
+  state under `UDA_GYM_HARNESS_STATE_DIR/custom_ui.json`, and be verified by
+  hidden `check.sh` through server-side state. This is a hygiene boundary, not a
+  root-proof sandbox: if the solving agent has unrestricted root access, local
+  custom UI tasks are weakly isolated and should not be treated as UDA-hard
+  unless the app runs on a separate server/container or CUA-Gym Hub.
 - **Runner is bench-agnostic.** `run_uda_agent` doesn't branch on
   benchmark name. New benchmark = new driver file + adapter content.
 - **One verifier-execution model per bench, not per task.** Removes

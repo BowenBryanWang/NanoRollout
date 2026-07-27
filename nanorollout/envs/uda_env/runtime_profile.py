@@ -84,20 +84,75 @@ def _normalize_runtime(runtime: Any) -> dict[str, Any]:
     return {k: v for k, v in out.items() if v is not None}
 
 
-def _profile_includes(profile_data: Mapping[str, Any]) -> str:
-    includes = profile_data.get("includes") or []
-    services = profile_data.get("services") or []
-    return "\n".join(str(item).lower() for item in [*includes, *services])
+def _normalize_software_name(value: str) -> str:
+    normalized = value.strip().lower().replace("_", "-")
+    aliases = {
+        "python3": "python",
+        "python 3": "python",
+        "sqlite3": "sqlite",
+        "sqlite browser": "sqlite",
+        "web browser": "browser",
+        "google chrome": "chrome",
+        "chrome browser": "chrome",
+        "libreoffice calc": "libreoffice",
+        "libreoffice writer": "libreoffice",
+        "libreoffice impress": "libreoffice",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _collect_profile_strings(
+    profile_name: str,
+    profile_data: Mapping[str, Any],
+    profiles: Mapping[str, dict[str, Any]],
+    seen: set[str] | None = None,
+) -> list[str]:
+    seen = seen or set()
+    if profile_name in seen:
+        return []
+    seen.add(profile_name)
+
+    values: list[str] = []
+    parent = _clean(profile_data.get("parent"))
+    if parent and parent in profiles:
+        _, parent_data = _resolve_alias(parent, profiles)
+        values.extend(_collect_profile_strings(parent, parent_data, profiles, seen))
+
+    for key in ("includes", "services", "required_versions", "default_binaries"):
+        raw = profile_data.get(key)
+        if isinstance(raw, Mapping):
+            values.extend(f"{k} {v}" for k, v in raw.items())
+        elif isinstance(raw, list):
+            values.extend(str(item) for item in raw)
+        elif raw:
+            values.append(str(raw))
+    return values
+
+
+def _profile_includes(
+    profile_name: str,
+    profile_data: Mapping[str, Any],
+    profiles: Mapping[str, dict[str, Any]],
+) -> str:
+    raw_values = _collect_profile_strings(profile_name, profile_data, profiles)
+    expanded: list[str] = []
+    for value in raw_values:
+        expanded.append(value.lower())
+        expanded.append(_normalize_software_name(value))
+    return "\n".join(expanded)
 
 
 def _missing_software(
     required: Iterable[Any],
+    profile_name: str,
     profile_data: Mapping[str, Any],
+    profiles: Mapping[str, dict[str, Any]],
 ) -> list[str]:
-    haystack = _profile_includes(profile_data)
+    haystack = _profile_includes(profile_name, profile_data, profiles)
     missing: list[str] = []
     for item in sorted(_lower_set(required)):
-        if item not in haystack:
+        normalized = _normalize_software_name(item)
+        if item not in haystack and normalized not in haystack:
             missing.append(item)
     return missing
 
@@ -155,7 +210,7 @@ def apply_task_runtime_to_sandbox_config(
 
     required_software = runtime.get("required_software") or []
     allow_fallback = bool(runtime.get("allow_profile_fallback", False))
-    missing = _missing_software(required_software, profile_data)
+    missing = _missing_software(required_software, resolved_name, profile_data, profiles)
     if missing and not allow_fallback:
         raise ValueError(
             f"runtime profile {resolved_name!r} is missing required software: {', '.join(missing)}"

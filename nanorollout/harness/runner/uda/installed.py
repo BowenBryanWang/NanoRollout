@@ -18,9 +18,12 @@ path uniformly.
 
 from __future__ import annotations
 
+import base64
+import json
 import logging
 import socket
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -176,6 +179,88 @@ def _build_agent_metrics(agent_result, agent_time: float, eval_time: float) -> d
     }
 
 
+def _capture_pre_rollout_screenshot(sandbox_client: Any, output_root: Path) -> dict[str, Any]:
+    """Save desktop/browser/app state after setup and before the installed agent acts."""
+    screenshot_dir = output_root / "screenshots"
+    screenshot_dir.mkdir(parents=True, exist_ok=True)
+    screenshot_path = screenshot_dir / "pre_rollout.png"
+    metadata_path = screenshot_dir / "pre_rollout.json"
+    info: dict[str, Any] = {
+        "ok": False,
+        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "path": str(screenshot_path.relative_to(output_root)),
+    }
+
+    def quality_issue(image_bytes: bytes) -> str | None:
+        try:
+            from io import BytesIO
+
+            from PIL import Image, ImageStat
+
+            with Image.open(BytesIO(image_bytes)) as image:
+                rgb = image.convert("RGB")
+                width, height = rgb.size
+                stat = ImageStat.Stat(rgb)
+                mean_luma = sum(stat.mean) / 3.0
+                pixels = rgb.load()
+                sampled = 0
+                nonblack = 0
+                step_x = max(1, width // 160)
+                step_y = max(1, height // 90)
+                for y in range(0, height, step_y):
+                    for x in range(0, width, step_x):
+                        sampled += 1
+                        if max(pixels[x, y]) > 24:
+                            nonblack += 1
+                ratio = nonblack / sampled if sampled else 0.0
+        except Exception as exc:
+            return f"screenshot_quality_check_failed: {type(exc).__name__}: {exc}"
+        if mean_luma < 3.0 or ratio < 0.005:
+            return f"screenshot_nearly_black mean_luma={mean_luma:.2f} nonblack_ratio={ratio:.4f}"
+        return None
+
+    try:
+        if sandbox_client is None or not hasattr(sandbox_client, "take_screenshot"):
+            info["error"] = "sandbox_client_take_screenshot_unavailable"
+            return info
+        attempts = []
+        last_error = "empty_screenshot_payload"
+        for attempt in range(1, 7):
+            screenshot_base64, status = sandbox_client.take_screenshot()
+            attempt_info: dict[str, Any] = {"attempt": attempt, "status": status}
+            if not screenshot_base64:
+                attempt_info["error"] = "empty_screenshot_payload"
+                attempts.append(attempt_info)
+                last_error = "empty_screenshot_payload"
+                time.sleep(2)
+                continue
+            if isinstance(screenshot_base64, str) and "," in screenshot_base64[:64]:
+                screenshot_base64 = screenshot_base64.split(",", 1)[1]
+            screenshot_bytes = base64.b64decode(screenshot_base64)
+            attempt_info["bytes"] = len(screenshot_bytes)
+            issue = quality_issue(screenshot_bytes)
+            attempt_info["quality_issue"] = issue
+            attempts.append(attempt_info)
+            if len(screenshot_bytes) > 0 and issue is None:
+                screenshot_path.write_bytes(screenshot_bytes)
+                info["bytes"] = len(screenshot_bytes)
+                info["status"] = status
+                info["attempts"] = attempts
+                info["ok"] = True
+                return info
+            last_error = issue or "empty_screenshot_file"
+            time.sleep(2)
+        info["attempts"] = attempts
+        info["error"] = last_error
+    except Exception as exc:
+        logger.exception("Failed to capture pre-rollout screenshot")
+        info["error"] = f"{type(exc).__name__}: {exc}"
+    finally:
+        metadata_path.write_text(json.dumps(info, indent=2), encoding="utf-8")
+
+    return info
+
+
 def _run_installed_uda_agent(
     agent_name: str,
     instance_id: str,
@@ -212,6 +297,7 @@ def _run_installed_uda_agent(
     eval_time = 0.0
     sandbox_client = None
     runtime_metadata: Dict[str, Any] = {}
+    pre_rollout_screenshot: Dict[str, Any] = {}
 
     with _attach_trial_log(trial_log_path, log_level):
         logger.info(
@@ -289,6 +375,10 @@ def _run_installed_uda_agent(
             driver = load_driver(driver_name)
             driver.setup_workspace(sandbox_client.runtime, task)
             driver.run_warmup(sandbox_client.runtime, task)
+            pre_rollout_screenshot = _capture_pre_rollout_screenshot(
+                sandbox_client,
+                output_root,
+            )
 
             shell_env = UdaShellAdapter(
                 sandbox_client.runtime,
@@ -356,6 +446,7 @@ def _run_installed_uda_agent(
         "agent": agent_name,
         "wall_time_sec": round(time.time() - started, 2),
         "sandbox_runtime": runtime_metadata or result.get("sandbox_runtime"),
+        "pre_rollout_screenshot": pre_rollout_screenshot,
         "reward_payload": reward_payload,
     }
     if error_msg:
